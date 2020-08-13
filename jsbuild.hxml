@@ -1,0 +1,11 @@
+# Class paths.
+-cp src
+
+# Libraries.
+-lib heaps
+
+# Entry point.
+-main Main
+
+# Output file.
+-js bin/js/game.js

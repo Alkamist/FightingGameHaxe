@@ -1,0 +1,12 @@
+# Class paths.
+-cp src
+
+# Libraries.
+-lib heaps
+-lib hlsdl
+
+# Entry point.
+-main Main
+
+# Output file.
+-hl bin/c/game.c
