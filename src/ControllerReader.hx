@@ -15,8 +15,6 @@ class ControllerReader extends ControllerState {
 		super.update();
 
 		if (isConnected) {
-			//trace(pad.xAxis);
-
 			xAxis.value = pad.values[padConfig.analogX];
 			yAxis.value = pad.values[padConfig.analogY];
 			cXAxis.value = pad.values[padConfig.ranalogX];
@@ -38,19 +36,14 @@ class ControllerReader extends ControllerState {
 	}
 
 	function onPad(p : hxd.Pad) {
-		if(!p.connected) {
-			throw "Pad not connected.";
-		}
+		if(p.connected) {
+			pad = p;
+			isConnected = true;
 
-		pad = p;
-		isConnected = true;
-
-		p.onDisconnect = function() {
-			if(p.connected) {
-				throw "OnDisconnect called while still connected.";
-			}
-			else {
-				isConnected = false;
+			p.onDisconnect = function() {
+				if(!p.connected) {
+					isConnected = false;
+				}
 			}
 		}
 	}

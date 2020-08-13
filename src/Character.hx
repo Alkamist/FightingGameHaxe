@@ -7,64 +7,64 @@ enum CharacterState {
 }
 
 class Character {
-    public var width : Float = 8.0;
-    public var height : Float = 16.0;
+    public var width = 8.0;
+    public var height = 16.0;
 
-    public var groundFriction : Float = 0.08;
-    public var dashStartVelocity : Float = 1.9;
-    public var dashMaxVelocity : Float = 2.2;
-    public var dashBaseAcceleration : Float = 0.02;
-    public var dashAxisAcceleration : Float = 0.1;
+    public var groundFriction = 0.08;
+    public var dashStartVelocity = 1.9;
+    public var dashMaxVelocity = 2.2;
+    public var dashBaseAcceleration = 0.02;
+    public var dashAxisAcceleration = 0.1;
 
-    public var walkStartVelocity : Float = 0.16;
-    public var walkMaxVelocity : Float = 1.6;
-    public var walkBaseAcceleration : Float = 0.2;
-    public var walkAxisAcceleration : Float = 0.0;
+    public var walkStartVelocity = 0.16;
+    public var walkMaxVelocity = 1.6;
+    public var walkBaseAcceleration = 0.2;
+    public var walkAxisAcceleration = 0.0;
 
-    public var airFriction : Float = 0.02;
-    public var airBaseAcceleration : Float = 0.02;
-    public var airAxisAcceleration : Float = 0.06;
-    public var airMaxVelocity : Float = 0.83;
+    public var airFriction = 0.02;
+    public var airBaseAcceleration = 0.02;
+    public var airAxisAcceleration = 0.06;
+    public var airMaxVelocity = 0.83;
 
-    public var jumpSquatFrames : Float = 3;
-    public var jumpVelocityDampening : Float = 0.83;
-    public var jumpMaxHorizontalVelocity : Float = 1.7;
-    public var jumpStartHorizontalVelocity : Float = 0.72;
-    public var shortHopVelocity : Float = 2.1;
-    public var fullHopVelocity : Float = 3.68;
-    public var fallVelocity : Float = 2.8;
-    public var fastFallVelocity : Float = 3.4;
-    public var extraJumpVelocityMultiplier : Float = 1.2;
-    public var extraJumpHorizontalAxisMultiplier : Float = 0.9;
-    public var extraJumps : Int = 1;
-    public var gravity : Float = 0.23;
+    public var jumpSquatFrames = 3;
+    public var jumpVelocityDampening = 0.83;
+    public var jumpMaxHorizontalVelocity = 1.7;
+    public var jumpStartHorizontalVelocity = 0.72;
+    public var shortHopVelocity = 2.1;
+    public var fullHopVelocity = 3.68;
+    public var fallVelocity = 2.8;
+    public var fastFallVelocity = 3.4;
+    public var extraJumpVelocityMultiplier = 1.2;
+    public var extraJumpHorizontalAxisMultiplier = 0.9;
+    public var extraJumps = 1;
+    public var gravity = 0.23;
 
-    public var x : Float = 0.0;
-    public var y : Float = 0.0;
-    public var xVelocity : Float = 0.0;
-    public var yVelocity : Float = 0.0;
-    public var xPrevious(default, null) : Float = 0.0;
-    public var yPrevious(default, null) : Float = 0.0;
+    public var x = 0.0;
+    public var y = 0.0;
+    public var xVelocity = 0.0;
+    public var yVelocity = 0.0;
+    public var xPrevious(default, null) = 0.0;
+    public var yPrevious(default, null) = 0.0;
 
-    public var state : CharacterState = airborne;
-    public var statePrevious(default, null) : CharacterState = airborne;
-    public var stateFrame(default, null) : Int = 0;
-    public var extraJumpsLeft : Int = 1;
-    public var isFacingRight(default, null) : Bool = true;
-    public var wasFacingRight(default, null) : Bool = true;
-    public var justTurned(get, never) : Bool;
-    function get_justTurned() return isFacingRight != wasFacingRight;
+    public var state: CharacterState = airborne;
+    public var statePrevious(default, null): CharacterState = airborne;
+    public var stateFrame(default, null) = 0;
+    public var extraJumpsLeft = 1;
+    public var isFacingRight(default, null) = true;
+    public var wasFacingRight(default, null) = true;
+    public var justTurned(get, never): Bool;
+    function get_justTurned(): Bool { return isFacingRight != wasFacingRight; }
 
     public function new() {}
 
-    public function land() {
+    public function land(): Void {
         yVelocity = 0.0;
         state = idle;
         extraJumpsLeft = extraJumps;
         //update();
     }
 
-    public function update(input : ControllerState) {
+    public function update(input: ControllerState): Void {
         statePrevious = state;
         wasFacingRight = isFacingRight;
 
@@ -83,10 +83,10 @@ class Character {
         stateFrame++;
     }
 
-    function decideState(input : ControllerState) {
-        var xAxis : AnalogAxis = input.xAxis;
-        var shouldJump : Bool = input.xButton.justPressed || input.yButton.justPressed;
-        var xAxisSmashed : Bool = xAxis.magnitude > 0.8 && xAxis.activeFrames < 3;
+    function decideState(input: ControllerState): Void {
+        var xAxis = input.xAxis;
+        var shouldJump = input.xButton.justPressed || input.yButton.justPressed;
+        var xAxisSmashed = xAxis.magnitude > 0.8 && xAxis.activeFrames < 3;
 
         if (state == idle) {
             if (shouldJump) {
@@ -128,8 +128,8 @@ class Character {
         }
     }
 
-    function processState(input : ControllerState) {
-        var xAxis : AnalogAxis = input.xAxis;
+    function processState(input: ControllerState): Void {
+        var xAxis = input.xAxis;
 
         if (state == idle) {
             xVelocity = applyFriction(xVelocity, groundFriction);
@@ -158,8 +158,8 @@ class Character {
         }
     }
 
-    function handleWalkMovement(input : ControllerState) {
-        var xAxis : AnalogAxis = input.xAxis;
+    function handleWalkMovement(input: ControllerState): Void {
+        var xAxis = input.xAxis;
 
         if (Math.abs(xVelocity) < walkStartVelocity) {
             xVelocity = xAxis.sign * walkStartVelocity;
@@ -173,8 +173,8 @@ class Character {
                                       groundFriction);
     }
 
-    function handleDashMovement(input : ControllerState) {
-        var xAxis : AnalogAxis = input.xAxis;
+    function handleDashMovement(input: ControllerState): Void {
+        var xAxis = input.xAxis;
 
         if (Math.abs(xVelocity) < dashStartVelocity) {
             xVelocity = xAxis.sign * dashStartVelocity;
@@ -188,7 +188,7 @@ class Character {
                                       groundFriction);
     }
 
-    function handleHorizontalAirMovement(input : ControllerState) {
+    function handleHorizontalAirMovement(input: ControllerState): Void {
         var xAxis : AnalogAxis = input.xAxis;
 
         if (xAxis.isActive) {
@@ -204,9 +204,9 @@ class Character {
         }
     }
 
-    function handleGroundedJump(input : ControllerState) {
-        var xAxis : AnalogAxis = input.xAxis;
-        var jumpIsActive : Bool = input.xButton.isPressed || input.yButton.isPressed;
+    function handleGroundedJump(input: ControllerState): Void {
+        var xAxis = input.xAxis;
+        var jumpIsActive = input.xButton.isPressed || input.yButton.isPressed;
 
         if (statePrevious == jumpSquat) {
             // Handle changing horizontal velocity when jumping off of the ground based on stick x axis.
@@ -225,9 +225,9 @@ class Character {
         }
     }
 
-    function handleExtraJumps(input : ControllerState) {
-        var xAxis : AnalogAxis = input.xAxis;
-        var shouldJump : Bool = input.xButton.justPressed || input.yButton.justPressed;
+    function handleExtraJumps(input: ControllerState): Void {
+        var xAxis = input.xAxis;
+        var shouldJump = input.xButton.justPressed || input.yButton.justPressed;
 
         if (shouldJump && extraJumpsLeft > 0) {
             xVelocity = xAxis.value * extraJumpHorizontalAxisMultiplier;
@@ -236,39 +236,39 @@ class Character {
         }
     }
 
-    function handleFastFall(input : ControllerState) {
-        var yAxis : AnalogAxis = input.yAxis;
-        var yAxisSmashed : Bool = yAxis.magnitude > 0.6 && yAxis.activeFrames < 3;
+    function handleFastFall(input: ControllerState): Void {
+        var yAxis = input.yAxis;
+        var yAxisSmashed = yAxis.magnitude > 0.6 && yAxis.activeFrames < 3;
 
         if (yVelocity <= 0.0 && yAxis.value < 0.0 && yAxisSmashed) {
             yVelocity = -fastFallVelocity;
         }
     }
 
-    function handleGravity() {
+    function handleGravity(): Void {
         yVelocity -= Math.min(gravity, fallVelocity + yVelocity);
     }
 
-    function applyFriction(velocity : Float, friction : Float) {
+    function applyFriction(velocity: Float, friction: Float): Float {
         return velocity - sign(velocity) * Math.min(Math.abs(velocity), friction);
     }
 
-    function applyAcceleration(velocity : Float,
-                               axisValue : Float,
-                               baseAcceleration : Float,
-                               axisAcceleration : Float,
-                               maxVelocity : Float,
-                               friction : Float) {
+    function applyAcceleration(velocity: Float,
+                               axisValue: Float,
+                               baseAcceleration: Float,
+                               axisAcceleration: Float,
+                               maxVelocity: Float,
+                               friction: Float): Float {
 
-        var baseVelocity : Float = velocity;
+        var baseVelocity = velocity;
 
         if (Math.abs(baseVelocity) > maxVelocity) {
             baseVelocity = applyFriction(baseVelocity, friction);
         }
 
-        var base : Float = sign(axisValue) * baseAcceleration;
-        var axisAddition : Float = axisValue * axisAcceleration;
-        var additionalVelocity : Float = base + axisAddition;
+        var base = sign(axisValue) * baseAcceleration;
+        var axisAddition = axisValue * axisAcceleration;
+        var additionalVelocity = base + axisAddition;
 
         if (axisValue > 0.0) {
             additionalVelocity = Math.min(additionalVelocity, maxVelocity - baseVelocity);
@@ -285,7 +285,7 @@ class Character {
         return baseVelocity + additionalVelocity;
     }
 
-    function sign(value : Float) {
+    function sign(value: Float): Float {
         if (value >= 0.0) return 1.0;
         else return -1.0;
     }

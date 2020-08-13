@@ -1,15 +1,15 @@
 class Main extends hxd.App {
-    var controllers : Array<ControllerReader> = [];
+    var controllers: Array<ControllerReader> = [];
 
-    static inline var numberOfPlayers : Int = 1;
-    var cameraZoom : Float = 6.0;
-    var cameraX : Int = 0;
-    var cameraY : Int = 0;
+    static inline var numberOfPlayers = 1;
+    var cameraZoom = 6.0;
+    var cameraX = 0;
+    var cameraY = 0;
 
-    var fixedTimestep : FixedTimestep = new FixedTimestep();
-    var players : Array<Character> = [];
-    var playerSprites : Array<h2d.Bitmap> = [];
-    var playerSpritePositions : Array<InterpolatedPosition> = [];
+    var fixedTimestep = new FixedTimestep();
+    var players: Array<Character> = [];
+    var playerSprites: Array<h2d.Bitmap> = [];
+    var playerSpritePositions: Array<InterpolatedPosition> = [];
 
     override function init() {
         hxd.Res.initEmbed();
