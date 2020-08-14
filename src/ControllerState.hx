@@ -1,8 +1,10 @@
 class ControllerState {
-    public var xAxis = new AnalogAxis();
-    public var yAxis = new AnalogAxis();
-    public var cXAxis = new AnalogAxis();
-    public var cYAxis = new AnalogAxis();
+    public var leftStick = new AnalogStick();
+    public var cStick = new AnalogStick();
+    public var xAxis: AnalogAxis;
+    public var yAxis: AnalogAxis;
+    public var cXAxis: AnalogAxis;
+    public var cYAxis: AnalogAxis;
     public var aButton = new Button();
     public var bButton = new Button();
     public var xButton = new Button();
@@ -18,13 +20,16 @@ class ControllerState {
     //public var lAnalog : AnalogSlider;
     //public var rAnalog : AnalogSlider;
 
-    public function new() {}
+    public function new() {
+        xAxis = leftStick.xAxis;
+        yAxis = leftStick.yAxis;
+        cXAxis = cStick.xAxis;
+        cYAxis = cStick.yAxis;
+    }
 
     public function update(): Void {
-        xAxis.update();
-        yAxis.update();
-        cXAxis.update();
-        cYAxis.update();
+        leftStick.update();
+        cStick.update();
         aButton.update();
         bButton.update();
         xButton.update();
