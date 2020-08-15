@@ -11,20 +11,20 @@ class AnalogAxis {
     public var magnitude(get, never): Float;
     function get_magnitude(): Float {
         if (value < 0.0) return -value;
-        return value;
+        else return value;
     }
 
     public var sign(get, never): Float;
     function get_sign(): Float {
         if (value < 0.0) return -1.0;
-        return 1.0;
+        else return 1.0;
     }
 
     public var normalizedValue: Float;
     function get_normalizedValue(): Float {
         if (value > 0.0) return 1.0;
         if (value < 0.0) return -1.0;
-        return value;
+        else return value;
     }
 
     public var isActive(get, never): Bool;
@@ -33,7 +33,9 @@ class AnalogAxis {
     public var wasActive(default, null) = false;
 
     public var justActivated(get, never): Bool;
-    function get_justActivated(): Bool { return isActive && !wasActive; }
+    function get_justActivated(): Bool {
+        return justCrossedCenter || (isActive && !wasActive);
+    }
 
     public var justDeactivated(get, never): Bool;
     function get_justDeactivated(): Bool { return wasActive && !isActive; }
@@ -47,13 +49,17 @@ class AnalogAxis {
     public function new() {}
 
     public function update(): Void {
-        valuePrevious = value;
-        wasActive = isActive;
-        if (isActive) {
+        if (justActivated) {
+            activeFrames = 0;
+        }
+        else if (isActive) {
             activeFrames++;
         }
         else {
             activeFrames = 0;
         }
+
+        valuePrevious = value;
+        wasActive = isActive;
     }
 }

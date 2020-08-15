@@ -64,10 +64,6 @@ class Main extends hxd.App {
 
             player.update(playerControllerState);
 
-            if (player.y < 0.0) {
-                player.y = 0.0;
-                player.land();
-            }
             playerSpritePositions[i].x = player.x * cameraZoom + cameraX;
             playerSpritePositions[i].y = -player.y * cameraZoom - 24 + cameraY;
             if (player.justTurned) {
