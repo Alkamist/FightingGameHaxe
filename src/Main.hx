@@ -9,16 +9,12 @@ import h2d.Text;
 import hxd.Res;
 
 class Main extends hxd.App {
-    var gamepadManager = new GamepadManager();
-    var playerGamepadIDs: Array<Int> = [];
-    var neutralControllerState = new ControllerState();
-
-    static inline var numberOfPlayers = 1;
+    var player = new Character();
+    var playerModel: Object;
+    var playerPosition = new InterpolatedPosition();
+    var playerController: KeyboardController;
 
     var fixedTimestep = new FixedTimestep();
-    var players: Array<Character> = [];
-    var playerModels: Array<Object> = [];
-    var playerPositions: Array<InterpolatedPosition> = [];
 
     var textFont: Font;
     var stateText: Text;
@@ -29,21 +25,13 @@ class Main extends hxd.App {
 
     override function init() {
         var cache = new ModelCache();
-
-        for (i in 0...numberOfPlayers) {
-            playerGamepadIDs.push(-1);
-            players.push(new Character());
-            playerPositions.push(new InterpolatedPosition());
-
-            var foxModel = cache.loadModel(Res.fox);
-            s3d.addChild(foxModel);
-            playerModels.push(foxModel);
-        }
-
+        var foxModel = cache.loadModel(Res.fox);
+        s3d.addChild(foxModel);
+        playerModel = foxModel;
         cache.dispose();
 
         s3d.camera.target.set(0.0, 0.0, 25.0);
-        s3d.camera.pos.set(-200.0, 0.0, 50.0);
+        s3d.camera.pos.set(-200.0, 0.0, 60.0);
 
         textFont = hxd.res.DefaultFont.get();
 
@@ -56,78 +44,55 @@ class Main extends hxd.App {
         stateFrameText = new Text(textFont, s2d);
         stateFrameText.textAlign = Center;
         stateFrameText.scale(2.0);
-        stateFrameText.x = s2d.width * 0.75;
-        stateFrameText.y = s2d.height * 0.3;
+        stateFrameText.x = stateText.x + 200;
+        stateFrameText.y = stateText.y;
 
         velocityText = new Text(textFont, s2d);
         velocityText.textAlign = Center;
         velocityText.scale(2.0);
-        velocityText.x = s2d.width * 0.25;
-        velocityText.y = s2d.height * 0.3;
+        velocityText.x = stateText.x - 200;
+        velocityText.y = stateText.y;
+
+        playerController = new KeyboardController(hxd.Window.getInstance());
     }
 
     override function update(dt: Float) {
         // Do one step of game physics if possible.
         fixedTimestep.update(dt, physicsUpdate);
 
-        // Update sprite visual positions.
-        for (i in 0...numberOfPlayers) {
-            if (isPaused) {
-                playerPositions[i].interpolation = 0.0;
-            }
-            else {
-                playerPositions[i].interpolation = fixedTimestep.physicsFraction;
-            }
-            playerModels[i].y = playerPositions[i].x;
-            playerModels[i].z = playerPositions[i].y;
+        // Update the visual position of the player model.
+        if (isPaused) {
+            playerPosition.interpolation = 0.0;
         }
+        else {
+            playerPosition.interpolation = fixedTimestep.physicsFraction;
+        }
+        playerModel.y = playerPosition.x;
+        playerModel.z = playerPosition.y;
     }
 
     function physicsUpdate() {
-        gamepadManager.update();
-        for (gamepadID => gamepad in gamepadManager.gamepads) {
-            if (gamepad.dUpButton.justPressed) {
-                var isVJoy = StringTools.contains(gamepad.heapsPad.name.toLowerCase(), "vjoy");
-                if (!isVJoy) {
-                    playerGamepadIDs[0] = gamepadID;
-                }
-            }
-        }
+        playerController.update();
 
         var frameAdvance = false;
-        var player0Controller = gamepadManager.gamepads[playerGamepadIDs[0]];
-        if (player0Controller != null) {
-            if (player0Controller.startButton.justPressed) {
-                isPaused = !isPaused;
-            }
-            if (isPaused && player0Controller.zButton.justPressed) {
-                frameAdvance = true;
-            }
+
+        if (playerController.startButton.justPressed) {
+            isPaused = !isPaused;
+        }
+        if (isPaused && playerController.zButton.justPressed) {
+            frameAdvance = true;
         }
 
         if (!isPaused || frameAdvance) {
-            for (i in 0...numberOfPlayers) {
-                var player = players[i];
-                var playerControllerState: ControllerState;
-                var playerGamepadID = playerGamepadIDs[i];
+            player.update(playerController);
+            stateText.text = player.state.getName();
+            stateFrameText.text = Std.string(player.stateFrame);
+            velocityText.text = floatToStringPrecision(player.xVelocity, 2) + ", " + floatToStringPrecision(player.yVelocity, 2);
 
-                if (playerGamepadID != -1) {
-                    playerControllerState = gamepadManager.gamepads[playerGamepadID];
-                }
-                else {
-                    playerControllerState = neutralControllerState;
-                }
-
-                player.update(playerControllerState);
-                stateText.text = player.state.getName();
-                stateFrameText.text = Std.string(player.stateFrame);
-                velocityText.text = floatToStringPrecision(player.xVelocity, 2) + ", " + floatToStringPrecision(player.yVelocity, 2);
-
-                playerPositions[i].x = player.x;
-                playerPositions[i].y = player.y;
-                if (player.justTurned) {
-                    playerModels[i].setDirection(new Vector(player.isFacingRight ? 1.0 : -1.0, 0.0, 0.0));
-                }
+            playerPosition.x = player.x;
+            playerPosition.y = player.y;
+            if (player.justTurned) {
+                playerModel.setDirection(new Vector(player.isFacingRight ? 1.0 : -1.0, 0.0, 0.0));
             }
         }
     }

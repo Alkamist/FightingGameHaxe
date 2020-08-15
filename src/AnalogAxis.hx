@@ -47,6 +47,28 @@ class AnalogAxis {
 
     public function new() {}
 
+    var highStateWasFirst = true;
+    public function setValueFromStates(lowState: Bool, highState: Bool): Float {
+        if (highState && !lowState)
+            highStateWasFirst = true;
+        else if (lowState && !highState)
+            highStateWasFirst = false;
+
+        var lowAndHigh = lowState && highState;
+        var onlyLow = lowState && !highState;
+        var onlyHigh = highState && !lowState;
+        if (onlyLow || (lowAndHigh && highStateWasFirst)) {
+            value = -1.0;
+        }
+        else if (onlyHigh || (lowAndHigh && !highStateWasFirst)) {
+            value = 1.0;
+        }
+        else {
+            value = 0.0;
+        }
+        return value;
+    }
+
     public function update(): Void {
         valuePrevious = value;
         wasActive = isActive;
