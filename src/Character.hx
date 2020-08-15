@@ -19,8 +19,7 @@ class Character {
 
     public var walkStartVelocity = 0.16;
     public var walkMaxVelocity = 1.6;
-    public var walkBaseAcceleration = 0.2;
-    public var walkAxisAcceleration = 0.0;
+    public var walkAcceleration = 0.2;
 
     public var airFriction = 0.02;
     public var airBaseAcceleration = 0.02;
@@ -69,6 +68,9 @@ class Character {
     public var justTurned(get, never): Bool;
     function get_justTurned(): Bool { return isFacingRight != wasFacingRight; }
 
+    var xAxisActiveFrames = 0;
+    var yAxisActiveFrames = 0;
+
     public function new() {}
 
     public function update(input: ControllerState): Void {
@@ -76,10 +78,11 @@ class Character {
         wasFacingRight = isFacingRight;
 
         var xAxis = input.xAxis;
+        var yAxis = input.yAxis;
         var shouldJump = input.xButton.justPressed || input.yButton.justPressed;
         var xAxisIsForward = xAxis.isActive && (xAxis.value > 0.0 && isFacingRight || xAxis.value < 0.0 && !isFacingRight);
         var xAxisIsBackward = xAxis.isActive && !xAxisIsForward;
-        var xAxisSmashed = xAxis.magnitude > 0.8 && xAxis.activeFrames < 2;
+        var xAxisSmashed = xAxis.magnitude > 0.8 && xAxisActiveFrames < 2;
 
         // Move based on velocity.
         xPrevious = x;
@@ -88,7 +91,7 @@ class Character {
         y += yVelocity;
 
         if (state == idle) {
-            xVelocity = applyFriction(xVelocity, groundFriction);
+            applyGroundFriction(false);
 
             if (shouldJump) {
                 state = jumpSquat;
@@ -107,7 +110,7 @@ class Character {
         }
 
         else if (state == turn) {
-            xVelocity = applyFriction(xVelocity, groundFriction);
+            applyGroundFriction(true);
 
             if (shouldJump) {
                 state = jumpSquat;
@@ -143,9 +146,6 @@ class Character {
                 if (xAxisSmashed) {
                     state = dash;
                 }
-                else {
-                    state = walk;
-                }
             }
             else {
                 state = idle;
@@ -167,7 +167,7 @@ class Character {
         }
 
         else if (state == jumpSquat) {
-            xVelocity = applyFriction(xVelocity, groundFriction);
+            applyGroundFriction(true);
 
             if (stateFrame >= jumpSquatFrames) {
                 handleGroundedJump(input);
@@ -189,9 +189,27 @@ class Character {
             }
         }
 
-        //trace(state);
-
         stateFrame++;
+
+        if (xAxis.justActivated) {
+            xAxisActiveFrames = 0;
+        }
+        else if (xAxis.isActive) {
+            xAxisActiveFrames++;
+        }
+        else {
+            xAxisActiveFrames = 0;
+        }
+
+        if (yAxis.justActivated) {
+            yAxisActiveFrames = 0;
+        }
+        else if (yAxis.isActive) {
+            yAxisActiveFrames++;
+        }
+        else {
+            yAxisActiveFrames = 0;
+        }
     }
 
     function handleWalkMovement(input: ControllerState): Void {
@@ -200,10 +218,10 @@ class Character {
         var targetVelocity = walkMaxVelocity * xAxis.value;
 
         if (Math.abs(xVelocity) > Math.abs(targetVelocity)) {
-            xVelocity = applyFriction(xVelocity, groundFriction);
+            applyGroundFriction(true);
         }
         else {
-            var acceleration = (targetVelocity - xVelocity) * (1.0 / (2.0 * walkMaxVelocity)) * (walkStartVelocity + walkBaseAcceleration);
+            var acceleration = (targetVelocity - xVelocity) * (1.0 / (2.0 * walkMaxVelocity)) * (walkStartVelocity + walkAcceleration);
             xVelocity += acceleration;
 
             var goingLeftTooFast = targetVelocity < 0.0 && xVelocity < targetVelocity;
@@ -226,7 +244,7 @@ class Character {
         }
         if (stateFrame >= 1) {
             if (!xAxis.isActive) {
-                xVelocity = applyFriction(xVelocity, groundFriction);
+                applyGroundFriction(false);
             }
             else {
                 var targetVelocity = xAxis.value * dashMaxVelocity;
@@ -234,26 +252,26 @@ class Character {
 
                 xVelocity += acceleration;
 
-                var holdingLeftWhileMovingLeft = targetVelocity < 0.0 && xVelocity < targetVelocity;
-                var holdingRightWhileMovingRight = targetVelocity > 0.0 && xVelocity > targetVelocity;
+                var holdingLeftAndMovingLeftTooFast = targetVelocity < 0.0 && xVelocity < targetVelocity;
+                var holdingRightAndMovingRightTooFast = targetVelocity > 0.0 && xVelocity > targetVelocity;
 
-                if (holdingLeftWhileMovingLeft || holdingRightWhileMovingRight) {
-                    xVelocity = applyFriction(xVelocity, groundFriction);
+                if (holdingLeftAndMovingLeftTooFast || holdingRightAndMovingRightTooFast) {
+                    applyGroundFriction(false);
 
-                    var holdingRightWhileGoingLeft = targetVelocity > 0.0 && xVelocity < targetVelocity;
-                    var holdingLeftWhileGoingRight = targetVelocity < 0.0 && xVelocity > targetVelocity;
+                    var holdingLeftAndCanGainSpeed = targetVelocity < 0.0 && xVelocity > targetVelocity;
+                    var holdingRightAndCanGainSpeed = targetVelocity > 0.0 && xVelocity < targetVelocity;
 
-                    if (holdingRightWhileGoingLeft || holdingLeftWhileGoingRight) {
+                    if (holdingLeftAndCanGainSpeed || holdingRightAndCanGainSpeed) {
                         xVelocity = targetVelocity;
                     }
                 }
                 else {
                     xVelocity += acceleration;
 
-                    holdingLeftWhileMovingLeft = targetVelocity < 0.0 && xVelocity < targetVelocity;
-                    holdingRightWhileMovingRight = targetVelocity > 0.0 && xVelocity > targetVelocity;
+                    holdingLeftAndMovingLeftTooFast = targetVelocity < 0.0 && xVelocity < targetVelocity;
+                    holdingRightAndMovingRightTooFast = targetVelocity > 0.0 && xVelocity > targetVelocity;
 
-                    if (holdingLeftWhileMovingLeft || holdingRightWhileMovingRight) {
+                    if (holdingLeftAndMovingLeftTooFast || holdingRightAndMovingRightTooFast) {
                         xVelocity = targetVelocity;
                     }
                 }
@@ -264,16 +282,41 @@ class Character {
     function handleHorizontalAirMovement(input: ControllerState): Void {
         var xAxis : AnalogAxis = input.xAxis;
 
-        if (xAxis.isActive) {
-            xVelocity = applyAcceleration(xVelocity,
-                                          xAxis.value,
-                                          airBaseAcceleration,
-                                          airAxisAcceleration,
-                                          airMaxVelocity,
-                                          airFriction);
+        var maxVelocity = xAxis.isActive ? xAxis.value * airMaxVelocity : 0.0;
+
+        var isHoldingLeftAndMovingLeftTooFast = maxVelocity < 0.0 && xVelocity < maxVelocity;
+        var isHoldingRightAndMovingRightTooFast = maxVelocity > 0.0 && xVelocity > maxVelocity;
+        var isHoldingLeftAndCanGainSpeed = maxVelocity < 0.0 && xVelocity > maxVelocity;
+        var isHoldingRightAndCanGainSpeed = maxVelocity > 0.0 && xVelocity < maxVelocity;
+
+        if (isHoldingLeftAndMovingLeftTooFast || isHoldingRightAndMovingRightTooFast) {
+            if (xVelocity > 0.0) {
+                xVelocity -= airFriction;
+                if (xVelocity < 0.0) {
+                    xVelocity = 0.0;
+                }
+            } else {
+                xVelocity += airFriction;
+                if (xVelocity > 0.0) {
+                    xVelocity = 0.0;
+                }
+            }
+        } else if (isHoldingLeftAndCanGainSpeed || isHoldingRightAndCanGainSpeed) {
+            xVelocity += (airAxisAcceleration * xAxis.value) + (xAxis.sign * airBaseAcceleration);
         }
-        else {
-            xVelocity = applyFriction(xVelocity, airFriction);
+
+        if (!xAxis.isActive) {
+            if (xVelocity > 0.0) {
+                xVelocity -= airFriction;
+                if (xVelocity < 0.0) {
+                    xVelocity = 0.0;
+                }
+            } else {
+                xVelocity += airFriction;
+                if (xVelocity > 0.0) {
+                    xVelocity = 0.0;
+                }
+            }
         }
     }
 
@@ -309,7 +352,7 @@ class Character {
 
     function handleFastFall(input: ControllerState): Void {
         var yAxis = input.yAxis;
-        var yAxisSmashed = yAxis.magnitude > 0.6 && yAxis.activeFrames < 2;
+        var yAxisSmashed = yAxis.magnitude > 0.6 && yAxisActiveFrames < 2;
 
         if (yVelocity <= 0.0 && yAxis.value < 0.0 && yAxisSmashed) {
             yVelocity = -fastFallVelocity;
@@ -320,40 +363,27 @@ class Character {
         yVelocity -= Math.min(gravity, fallVelocity + yVelocity);
     }
 
-    function applyFriction(velocity: Float, friction: Float): Float {
-        return velocity - sign(velocity) * Math.min(Math.abs(velocity), friction);
-    }
-
-    function applyAcceleration(velocity: Float,
-                               axisValue: Float,
-                               baseAcceleration: Float,
-                               axisAcceleration: Float,
-                               maxVelocity: Float,
-                               friction: Float): Float {
-
-        var baseVelocity = velocity;
-
-        if (Math.abs(baseVelocity) > maxVelocity) {
-            baseVelocity = applyFriction(baseVelocity, friction);
+    function applyGroundFriction(applyDouble: Bool) {
+        if (xVelocity > 0.0) {
+            if (applyDouble && xVelocity > walkMaxVelocity) {
+                xVelocity -= groundFriction * 2.0;
+            }
+            else {
+                xVelocity -= groundFriction;
+            }
+            if (xVelocity < 0.0) {
+                xVelocity = 0.0;
+            }
+        } else {
+            if (applyDouble && xVelocity < -walkMaxVelocity) {
+                xVelocity += groundFriction * 2.0;
+            } else {
+                xVelocity += groundFriction;
+            }
+            if (xVelocity > 0.0) {
+                xVelocity = 0.0;
+            }
         }
-
-        var base = sign(axisValue) * baseAcceleration;
-        var axisAddition = axisValue * axisAcceleration;
-        var additionalVelocity = base + axisAddition;
-
-        if (axisValue > 0.0) {
-            additionalVelocity = Math.min(additionalVelocity, maxVelocity - baseVelocity);
-            additionalVelocity = Math.max(0.0, additionalVelocity);
-        }
-        else if (axisValue < 0.0) {
-            additionalVelocity = Math.max(additionalVelocity, -maxVelocity - baseVelocity);
-            additionalVelocity = Math.min(0.0, additionalVelocity);
-        }
-        else {
-            additionalVelocity = 0.0;
-        }
-
-        return baseVelocity + additionalVelocity;
     }
 
     function sign(value: Float): Float {

@@ -1,6 +1,8 @@
+import hxd.Pad;
+
 class Gamepad extends ControllerState {
-	public var heapsPad: hxd.Pad;
-	public var heapsPadConfig = hxd.Pad.DEFAULT_CONFIG;
+	public var heapsPad: Pad;
+	public var heapsPadConfig = Pad.DEFAULT_CONFIG;
 
 	public var axisScale = 1.6;
 	public var xAxisCalibration = 0.0;
@@ -8,7 +10,7 @@ class Gamepad extends ControllerState {
 	public var cXAxisCalibration = 0.0;
 	public var cYAxisCalibration = 0.0;
 
-	public function new(heapsPad: hxd.Pad) {
+	public function new(heapsPad: Pad) {
 		super();
 		this.heapsPad = heapsPad;
 

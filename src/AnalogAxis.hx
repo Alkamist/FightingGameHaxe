@@ -6,7 +6,6 @@ class AnalogAxis {
 
     public var valuePrevious(default, null) = 0.0;
     public var deadZone = 0.2875;
-    public var activeFrames(default, null) = 0;
 
     public var magnitude(get, never): Float;
     function get_magnitude(): Float {
@@ -49,16 +48,6 @@ class AnalogAxis {
     public function new() {}
 
     public function update(): Void {
-        if (justActivated) {
-            activeFrames = 0;
-        }
-        else if (isActive) {
-            activeFrames++;
-        }
-        else {
-            activeFrames = 0;
-        }
-
         valuePrevious = value;
         wasActive = isActive;
     }
