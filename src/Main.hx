@@ -4,27 +4,29 @@ class Main extends hxd.App {
     var neutralControllerState = new ControllerState();
 
     static inline var numberOfPlayers = 1;
-    var cameraZoom = 6.0;
-    var cameraX = 0;
-    var cameraY = 500;
 
     var fixedTimestep = new FixedTimestep();
     var players: Array<Character> = [];
-    var playerSprites: Array<h2d.Bitmap> = [];
-    var playerSpritePositions: Array<InterpolatedPosition> = [];
+    var playerModels: Array<h3d.scene.Object> = [];
+    var playerPositions: Array<InterpolatedPosition> = [];
 
     override function init() {
-        hxd.Res.initEmbed();
+        var cache = new h3d.prim.ModelCache();
 
-        var tile = hxd.Res.ppL.toTile().center();
         for (i in 0...numberOfPlayers) {
             playerGamepadIDs.push(-1);
             players.push(new Character());
-            var bitmap = new h2d.Bitmap(tile, s2d);
-            bitmap.setScale(4.0);
-            playerSprites.push(bitmap);
-            playerSpritePositions.push(new InterpolatedPosition());
+            playerPositions.push(new InterpolatedPosition());
+
+            var foxModel = cache.loadModel(hxd.Res.fox);
+            s3d.addChild(foxModel);
+            playerModels.push(foxModel);
         }
+
+        cache.dispose();
+
+        s3d.camera.target.set(0.0, 0.0, 25.0);
+        s3d.camera.pos.set(-200.0, 0.0, 50.0);
     }
 
     override function update(dt: Float) {
@@ -33,9 +35,9 @@ class Main extends hxd.App {
 
         // Update sprite visual positions.
         for (i in 0...numberOfPlayers) {
-            playerSpritePositions[i].interpolation = fixedTimestep.physicsFraction;
-            playerSprites[i].x = playerSpritePositions[i].x;
-            playerSprites[i].y = playerSpritePositions[i].y;
+            playerPositions[i].interpolation = fixedTimestep.physicsFraction;
+            playerModels[i].y = playerPositions[i].x;
+            playerModels[i].z = playerPositions[i].y;
         }
     }
 
@@ -64,15 +66,16 @@ class Main extends hxd.App {
 
             player.update(playerControllerState);
 
-            playerSpritePositions[i].x = player.x * cameraZoom + cameraX;
-            playerSpritePositions[i].y = -player.y * cameraZoom - 24 + cameraY;
+            playerPositions[i].x = player.x;
+            playerPositions[i].y = player.y;
             if (player.justTurned) {
-                playerSprites[i].tile.flipX();
+                playerModels[i].setDirection(new h3d.Vector(player.isFacingRight ? 1.0 : -1.0, 0.0, 0.0));
             }
         }
     }
 
     static function main() {
+        hxd.Res.initEmbed();
         new Main();
     }
 }

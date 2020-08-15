@@ -1,17 +1,17 @@
 {
 	"version": "0.2.0",
 	"configurations": [
-		{
-			"name": "Launch Chrome",
-			"request": "launch",
-			"type": "pwa-chrome",
-			"url": "file://${workspaceFolder}/bin/js/index.html",
-			"webRoot": "${workspaceFolder}/bin/js",
-			"preLaunchTask": {
-				"type" : "hxml",
-				"file" : "jsbuild.hxml"
-			}
-		},
+		//{
+		//	"name": "Launch Chrome",
+		//	"request": "launch",
+		//	"type": "pwa-chrome",
+		//	"url": "file://${workspaceFolder}/bin/js/index.html",
+		//	"webRoot": "${workspaceFolder}/bin/js",
+		//	"preLaunchTask": {
+		//		"type" : "hxml",
+		//		"file" : "jsbuild.hxml"
+		//	}
+		//},
 		{
 			"name": "HashLink",
 			"request": "launch",
