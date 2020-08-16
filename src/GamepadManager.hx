@@ -5,13 +5,13 @@ class GamepadManager {
 		hxd.Pad.wait(onGamepadActivate);
 	}
 
-	public function update(): Void {
+	public function update() {
 		for (gamepad in gamepads) {
 			gamepad.update();
 		}
 	}
 
-	function onGamepadActivate(heapsPad: hxd.Pad): Void {
+	function onGamepadActivate(heapsPad: hxd.Pad) {
 		if(heapsPad.connected) {
 			var gamepad = new Gamepad(heapsPad);
 			gamepads.push(gamepad);

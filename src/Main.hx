@@ -30,6 +30,8 @@ class Main extends hxd.App {
         playerModel = foxModel;
         cache.dispose();
 
+        s3d.lightSystem.ambientLight.set(1.0, 1.0, 1.0);
+
         s3d.camera.target.set(0.0, 0.0, 25.0);
         s3d.camera.pos.set(-200.0, 0.0, 60.0);
 
@@ -85,9 +87,9 @@ class Main extends hxd.App {
 
         if (!isPaused || frameAdvance) {
             player.update(playerController);
-            stateText.text = player.state.getName();
+            stateText.text = player.state;
             stateFrameText.text = Std.string(player.stateFrame);
-            velocityText.text = floatToStringPrecision(player.xVelocity, 2) + ", " + floatToStringPrecision(player.yVelocity, 2);
+            velocityText.text = floatToStringPrecision(player.xVelocity, 3) + ", " + floatToStringPrecision(player.yVelocity, 3);
 
             playerPosition.x = player.x;
             playerPosition.y = player.y;

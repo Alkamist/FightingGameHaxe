@@ -16,7 +16,7 @@ class KeyboardTracker {
         window.addEventTarget(onEvent);
     }
 
-    public function update(): Void {
+    public function update() {
         // Update all keystates.
         for (keyName in keyCodeNames) {
             keys[keyName].update();

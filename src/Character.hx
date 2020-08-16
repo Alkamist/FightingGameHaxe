@@ -1,16 +1,4 @@
-enum CharacterState {
-    airborne;
-    idle;
-    turn;
-    walk;
-    dash;
-    jumpSquat;
-}
-
 class Character {
-    public var width = 8.0;
-    public var height = 16.0;
-
     public var groundFriction = 0.08;
     public var dashStartVelocity = 1.9;
     public var dashMaxVelocity = 2.2;
@@ -50,146 +38,60 @@ class Character {
     public var yVelocity = 0.0;
     public var xPrevious(default, null) = 0.0;
     public var yPrevious(default, null) = 0.0;
-
-    public var state(get, set): CharacterState;
-    function get_state(): CharacterState { return m_state; }
-    function set_state(value: CharacterState) {
-        stateFrame = 0;
-        return m_state = value;
-    }
-    var m_state = airborne;
-
-    public var statePrevious(default, null): CharacterState = airborne;
-    public var stateFrame(default, null) = 0;
     public var extraJumpsLeft = 1;
-    public var isFacingRight(default, null) = true;
+    public var isFacingRight = true;
     public var wasFacingRight(default, null) = true;
 
     public var justTurned(get, never): Bool;
-    function get_justTurned(): Bool { return isFacingRight != wasFacingRight; }
+        function get_justTurned() { return isFacingRight != wasFacingRight; }
 
-    var xAxisActiveFrames = 0;
-    var yAxisActiveFrames = 0;
+    public var state(get, set): String;
+        function get_state() { return stateMachine.state; }
+        function set_state(newState: String) { return stateMachine.state = newState; }
 
-    public function new() {}
+    public var statePrevious(get, never): String;
+        function get_statePrevious() { return stateMachine.statePrevious; }
 
-    public function update(input: ControllerState): Void {
-        statePrevious = state;
+    public var stateFrame(get, never): Int;
+        function get_stateFrame() { return stateMachine.stateFrame; }
+
+    public var input = new ControllerState();
+    public var stateMachine: CharacterStateMachine;
+
+    // Helper variables.
+    public var xAxisActiveFrames = 0;
+    public var yAxisActiveFrames = 0;
+    public var xAxis: AnalogAxis;
+    public var yAxis: AnalogAxis;
+    public var shouldJump: Bool;
+    public var jumpIsActive: Bool;
+    public var xAxisIsForward: Bool;
+    public var xAxisIsBackward: Bool;
+    public var xAxisSmashed: Bool;
+    public var yAxisSmashed: Bool;
+
+    public function new() {
+        stateMachine = new CharacterStateMachine(this);
+    }
+
+    public function update(controllerState: ControllerState): Void {
         wasFacingRight = isFacingRight;
-
-        var xAxis = input.xAxis;
-        var yAxis = input.yAxis;
-        var shouldJump = input.xButton.justPressed || input.yButton.justPressed;
-        var xAxisIsForward = xAxis.isActive && (xAxis.value > 0.0 && isFacingRight || xAxis.value < 0.0 && !isFacingRight);
-        var xAxisIsBackward = xAxis.isActive && !xAxisIsForward;
-        var xAxisSmashed = xAxis.magnitude > 0.8 && xAxisActiveFrames < 2;
-
-        // Move based on velocity.
         xPrevious = x;
         yPrevious = y;
-        x += xVelocity;
-        y += yVelocity;
 
-        if (state == idle) {
-            applyGroundFriction(false);
+        input.update();
+        applyControllerState(controllerState);
 
-            if (shouldJump) {
-                state = jumpSquat;
-            }
-            else if (xAxisIsForward) {
-                if (xAxisSmashed) {
-                    state = dash;
-                }
-                else {
-                    state = walk;
-                }
-            }
-            else if (xAxisIsBackward) {
-                state = turn;
-            }
-        }
+        xAxis = input.xAxis;
+        yAxis = input.yAxis;
+        shouldJump = input.xButton.justPressed || input.yButton.justPressed;
+        jumpIsActive = input.xButton.isPressed || input.yButton.isPressed;
+        xAxisIsForward = xAxis.isActive && (xAxis.value > 0.0 && isFacingRight || xAxis.value < 0.0 && !isFacingRight);
+        xAxisIsBackward = xAxis.isActive && !xAxisIsForward;
+        xAxisSmashed = xAxis.magnitude > 0.8 && xAxisActiveFrames < 2;
+        yAxisSmashed = yAxis.magnitude > 0.6 && yAxisActiveFrames < 2;
 
-        else if (state == turn) {
-            applyGroundFriction(true);
-
-            if (shouldJump) {
-                state = jumpSquat;
-            }
-            else if (xAxisIsBackward) {
-                //if (xAxisSmashed && (stateFrame < dashBackFrameWindow)
-                //                  || stateFrame == slowDashBackFrames) {
-
-                if (xAxisSmashed) {
-                    isFacingRight = !isFacingRight;
-                    state = dash;
-                }
-                else if (stateFrame == slowDashBackFrames) {
-                //if (stateFrame == slowDashBackFrames) {
-                    isFacingRight = !isFacingRight;
-                }
-            }
-            else if (xAxisIsForward && stateFrame >= turnFrames) {
-                state = walk;
-            }
-            else if (stateFrame >= turnFrames) {
-                state = idle;
-            }
-        }
-
-        else if (state == walk) {
-            handleWalkMovement(input);
-
-            if (shouldJump) {
-                state = jumpSquat;
-            }
-            else if (xAxisIsForward) {
-                if (xAxisSmashed) {
-                    state = dash;
-                }
-            }
-            else {
-                state = idle;
-            }
-        }
-
-        else if (state == dash) {
-            handleDashMovement(input);
-
-            if (shouldJump) {
-                state = jumpSquat;
-            }
-            else if (xAxisIsBackward) {
-                state = turn;
-            }
-            else if (!xAxis.isActive && stateFrame >= dashMinimumFrames) {
-                state = idle;
-            }
-        }
-
-        else if (state == jumpSquat) {
-            applyGroundFriction(true);
-
-            if (stateFrame >= jumpSquatFrames) {
-                handleGroundedJump(input);
-                state = airborne;
-            }
-        }
-
-        else if (state == airborne) {
-            handleExtraJumps(input);
-            handleHorizontalAirMovement(input);
-            handleFastFall(input);
-            handleGravity();
-
-            if (y < 0.0) {
-                y = 0.0;
-                yVelocity = 0.0;
-                state = idle;
-                extraJumpsLeft = extraJumps;
-            }
-        }
-
-        stateFrame++;
+        stateMachine.update();
 
         if (xAxis.justActivated) {
             xAxisActiveFrames = 0;
@@ -212,182 +114,89 @@ class Character {
         }
     }
 
-    function handleWalkMovement(input: ControllerState): Void {
-        var xAxis = input.xAxis;
-
-        var targetVelocity = walkMaxVelocity * xAxis.value;
-
-        if (Math.abs(xVelocity) > Math.abs(targetVelocity)) {
-            applyGroundFriction(true);
-        }
-        else {
-            var acceleration = (targetVelocity - xVelocity) * (1.0 / (2.0 * walkMaxVelocity)) * (walkStartVelocity + walkAcceleration);
-            xVelocity += acceleration;
-
-            var goingLeftTooFast = targetVelocity < 0.0 && xVelocity < targetVelocity;
-            var goingRightTooFast = targetVelocity > 0.0 && xVelocity > targetVelocity;
-
-            if (goingLeftTooFast || goingRightTooFast) {
-                xVelocity = targetVelocity;
-            }
-        }
+    public function moveWithVelocity(): Void {
+        x += xVelocity;
+        y += yVelocity;
     }
 
-    function handleDashMovement(input: ControllerState): Void {
-        var xAxis = input.xAxis;
-
-        if (stateFrame == 1) {
-            xVelocity += dashStartVelocity * xAxis.sign;
-            if (Math.abs(xVelocity) > dashMaxVelocity) {
-                xVelocity = dashMaxVelocity * xAxis.sign;
-            }
-        }
-        if (stateFrame >= 1) {
-            if (!xAxis.isActive) {
-                applyGroundFriction(false);
-            }
-            else {
-                var targetVelocity = xAxis.value * dashMaxVelocity;
-                var acceleration = xAxis.value * dashAxisAcceleration;
-
-                xVelocity += acceleration;
-
-                var holdingLeftAndMovingLeftTooFast = targetVelocity < 0.0 && xVelocity < targetVelocity;
-                var holdingRightAndMovingRightTooFast = targetVelocity > 0.0 && xVelocity > targetVelocity;
-
-                if (holdingLeftAndMovingLeftTooFast || holdingRightAndMovingRightTooFast) {
-                    applyGroundFriction(false);
-
-                    var holdingLeftAndCanGainSpeed = targetVelocity < 0.0 && xVelocity > targetVelocity;
-                    var holdingRightAndCanGainSpeed = targetVelocity > 0.0 && xVelocity < targetVelocity;
-
-                    if (holdingLeftAndCanGainSpeed || holdingRightAndCanGainSpeed) {
-                        xVelocity = targetVelocity;
-                    }
-                }
-                else {
-                    xVelocity += acceleration;
-
-                    holdingLeftAndMovingLeftTooFast = targetVelocity < 0.0 && xVelocity < targetVelocity;
-                    holdingRightAndMovingRightTooFast = targetVelocity > 0.0 && xVelocity > targetVelocity;
-
-                    if (holdingLeftAndMovingLeftTooFast || holdingRightAndMovingRightTooFast) {
-                        xVelocity = targetVelocity;
-                    }
-                }
-            }
-        }
-    }
-
-    function handleHorizontalAirMovement(input: ControllerState): Void {
-        var xAxis : AnalogAxis = input.xAxis;
-
-        var maxVelocity = xAxis.isActive ? xAxis.value * airMaxVelocity : 0.0;
-
-        var isHoldingLeftAndMovingLeftTooFast = maxVelocity < 0.0 && xVelocity < maxVelocity;
-        var isHoldingRightAndMovingRightTooFast = maxVelocity > 0.0 && xVelocity > maxVelocity;
-        var isHoldingLeftAndCanGainSpeed = maxVelocity < 0.0 && xVelocity > maxVelocity;
-        var isHoldingRightAndCanGainSpeed = maxVelocity > 0.0 && xVelocity < maxVelocity;
-
-        if (isHoldingLeftAndMovingLeftTooFast || isHoldingRightAndMovingRightTooFast) {
-            if (xVelocity > 0.0) {
-                xVelocity -= airFriction;
-                if (xVelocity < 0.0) {
-                    xVelocity = 0.0;
-                }
-            } else {
-                xVelocity += airFriction;
-                if (xVelocity > 0.0) {
-                    xVelocity = 0.0;
-                }
-            }
-        } else if (isHoldingLeftAndCanGainSpeed || isHoldingRightAndCanGainSpeed) {
-            xVelocity += (airAxisAcceleration * xAxis.value) + (xAxis.sign * airBaseAcceleration);
-        }
-
+    public function handleHorizontalAirMovement(): Void {
         if (!xAxis.isActive) {
-            if (xVelocity > 0.0) {
-                xVelocity -= airFriction;
-                if (xVelocity < 0.0) {
-                    xVelocity = 0.0;
-                }
-            } else {
-                xVelocity += airFriction;
-                if (xVelocity > 0.0) {
-                    xVelocity = 0.0;
-                }
-            }
-        }
-    }
-
-    function handleGroundedJump(input: ControllerState): Void {
-        var xAxis = input.xAxis;
-        var jumpIsActive = input.xButton.isPressed || input.yButton.isPressed;
-
-        // Handle changing horizontal velocity when jumping off of the ground based on stick x axis.
-        xVelocity = (xVelocity * jumpVelocityDampening) + (xAxis.value * jumpStartHorizontalVelocity);
-        if (Math.abs(xVelocity) > jumpMaxHorizontalVelocity) {
-            xVelocity = sign(xVelocity) * jumpMaxHorizontalVelocity;
-        }
-
-        // Handle short hopping and full hopping.
-        if (jumpIsActive) {
-            yVelocity = fullHopVelocity;
+            xVelocity = applyFriction(xVelocity, airFriction);
         }
         else {
-            yVelocity = shortHopVelocity;
+            xVelocity = applyAcceleration(xVelocity,
+                                          xAxis.value,
+                                          airBaseAcceleration,
+                                          airAxisAcceleration,
+                                          airMaxVelocity,
+                                          airFriction);
         }
     }
 
-    function handleExtraJumps(input: ControllerState): Void {
-        var xAxis = input.xAxis;
-        var shouldJump = input.xButton.justPressed || input.yButton.justPressed;
-
-        if (shouldJump && extraJumpsLeft > 0) {
-            xVelocity = xAxis.value * extraJumpHorizontalAxisMultiplier;
-            yVelocity = fullHopVelocity * extraJumpVelocityMultiplier;
-            extraJumpsLeft -= 1;
-        }
-    }
-
-    function handleFastFall(input: ControllerState): Void {
-        var yAxis = input.yAxis;
-        var yAxisSmashed = yAxis.magnitude > 0.6 && yAxisActiveFrames < 2;
-
+    public function handleFastFall(): Void {
         if (yVelocity <= 0.0 && yAxis.value < 0.0 && yAxisSmashed) {
             yVelocity = -fastFallVelocity;
         }
     }
 
-    function handleGravity(): Void {
+    public function handleGravity(): Void {
         yVelocity -= Math.min(gravity, fallVelocity + yVelocity);
     }
 
-    function applyGroundFriction(applyDouble: Bool) {
-        if (xVelocity > 0.0) {
-            if (applyDouble && xVelocity > walkMaxVelocity) {
-                xVelocity -= groundFriction * 2.0;
-            }
-            else {
-                xVelocity -= groundFriction;
-            }
-            if (xVelocity < 0.0) {
-                xVelocity = 0.0;
-            }
-        } else {
-            if (applyDouble && xVelocity < -walkMaxVelocity) {
-                xVelocity += groundFriction * 2.0;
-            } else {
-                xVelocity += groundFriction;
-            }
-            if (xVelocity > 0.0) {
-                xVelocity = 0.0;
-            }
-        }
+    public function applyFriction(velocity: Float, friction: Float): Float {
+        return velocity - sign(velocity) * Math.min(Math.abs(velocity), friction);
     }
 
-    function sign(value: Float): Float {
+    public function applyAcceleration(velocity: Float,
+                                      axisValue: Float,
+                                      baseAcceleration: Float,
+                                      axisAcceleration: Float,
+                                      maxVelocity: Float,
+                                      friction: Float): Float {
+        var baseVelocity = velocity;
+
+        if (Math.abs(baseVelocity) > maxVelocity) {
+            baseVelocity = applyFriction(baseVelocity, friction);
+        }
+
+        var additionalVelocity = sign(axisValue) * baseAcceleration + axisValue * axisAcceleration;
+
+        if (axisValue > 0.0) {
+            additionalVelocity = Math.min(additionalVelocity, maxVelocity - baseVelocity);
+            additionalVelocity = Math.max(0.0, additionalVelocity);
+        }
+        else if (axisValue < 0.0) {
+            additionalVelocity = Math.max(additionalVelocity, -maxVelocity - baseVelocity);
+            additionalVelocity = Math.min(0.0, additionalVelocity);
+        }
+        else {
+            additionalVelocity = 0.0;
+        }
+
+        return baseVelocity + additionalVelocity;
+    }
+
+    public function sign(value: Float): Float {
         if (value >= 0.0) return 1.0;
         else return -1.0;
+    }
+
+    function applyControllerState(controllerState: ControllerState) {
+        input.xAxis.value = controllerState.xAxis.value;
+        input.yAxis.value = controllerState.yAxis.value;
+        input.cXAxis.value = controllerState.cXAxis.value;
+        input.cYAxis.value = controllerState.cYAxis.value;
+        input.aButton.isPressed = controllerState.aButton.isPressed;
+        input.bButton.isPressed = controllerState.bButton.isPressed;
+        input.xButton.isPressed = controllerState.xButton.isPressed;
+        input.yButton.isPressed = controllerState.yButton.isPressed;
+        input.zButton.isPressed = controllerState.zButton.isPressed;
+        input.lButton.isPressed = controllerState.lButton.isPressed;
+        input.rButton.isPressed = controllerState.rButton.isPressed;
+        input.startButton.isPressed = controllerState.startButton.isPressed;
+        input.dLeftButton.isPressed = controllerState.dLeftButton.isPressed;
+        input.dRightButton.isPressed = controllerState.dRightButton.isPressed;
+        input.dDownButton.isPressed = controllerState.dDownButton.isPressed;
+        input.dUpButton.isPressed = controllerState.dUpButton.isPressed;
     }
 }

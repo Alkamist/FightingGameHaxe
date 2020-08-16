@@ -31,14 +31,14 @@ class Gamepad extends ControllerState {
 		calibrate();
 	}
 
-	public function calibrate(): Void {
+	public function calibrate() {
 		xAxisCalibration = safeAnalogValue(heapsPad.values[heapsPadConfig.analogX]);
 		yAxisCalibration = safeAnalogValue(heapsPad.values[heapsPadConfig.analogY]);
 		cXAxisCalibration = safeAnalogValue(heapsPad.values[heapsPadConfig.ranalogX]);
 		cYAxisCalibration = safeAnalogValue(heapsPad.values[heapsPadConfig.ranalogY]);
 	}
 
-	override function update(): Void {
+	override function update() {
 		super.update();
 
 		xAxis.value = convertAxisValue(heapsPad.values[heapsPadConfig.analogX], xAxisCalibration);
@@ -67,7 +67,7 @@ class Gamepad extends ControllerState {
 		dUpButton.isPressed = heapsPad.buttons[heapsPadConfig.dpadUp];
 	}
 
-	function convertAxisValue(value: Float, calibration: Float): Float {
+	function convertAxisValue(value: Float, calibration: Float) {
 		var calibratedValue = safeAnalogValue(value) - calibration;
 		var scaledValue = calibratedValue * axisScale;
 		//var calibratedValue = scaledValue - calibration;
@@ -80,7 +80,7 @@ class Gamepad extends ControllerState {
 		return scaledValue;
 	}
 
-	function safeAnalogValue(value: Float): Float {
+	function safeAnalogValue(value: Float) {
 		if (Math.isNaN(value)) return 0.0;
 		return value;
 	}

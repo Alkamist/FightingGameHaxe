@@ -1,17 +1,18 @@
 class FixedTimestep {
-    public var physicsFps: Float = 60.0;
-    public var physicsFraction: Float = 0.0;
-    public var physicsDelta(get, never): Float; 
-    function get_physicsDelta(): Float { return 1.0 / physicsFps; }
-    public var displayFps: Float = 144.0;
-    public var displayDelta: Float = 0.0;
+    public var physicsFps = 60.0;
+    public var physicsFraction = 0.0;
+    public var physicsDelta(get, never): Float;
+        function get_physicsDelta() { return 1.0 / physicsFps; }
 
-    var accumulator: Float = 0.0;
-    var elapsedTime: Float = 0.0;
+    public var displayFps = 144.0;
+    public var displayDelta = 0.0;
+
+    var accumulator = 0.0;
+    var elapsedTime = 0.0;
 
     public function new() {}
 
-    public function update(delta: Float, updateFunction): Void {
+    public function update(delta: Float, updateFunction: () -> Void) {
         displayDelta = delta;
         elapsedTime += delta;
         accumulator += delta;

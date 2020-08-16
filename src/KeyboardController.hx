@@ -3,7 +3,7 @@ import hxd.Window;
 class KeyboardController extends ControllerState {
     public var keyboardTracker: KeyboardTracker;
 
-    public var keyBinds: Map<String, String> = [
+    public var keyBinds = [
         "left" => "a",
         "right" => "d",
         "down" => "s",
@@ -44,7 +44,7 @@ class KeyboardController extends ControllerState {
         }
     }
 
-    override public function update(): Void {
+    override public function update() {
         super.update();
 
         // Update keyboard keys.
@@ -62,10 +62,7 @@ class KeyboardController extends ControllerState {
         cXAxis.setValueFromStates(actionStates["cLeft"].isPressed, actionStates["cRight"].isPressed);
         cYAxis.setValueFromStates(actionStates["cDown"].isPressed, actionStates["cUp"].isPressed);
 
-        if (actionStates["tilt"].isPressed) {
-            xAxis.value *= 0.5;
-            yAxis.value *= 0.5;
-        }
+        //xAxis.value *= 0.3;
 
         aButton.isPressed = actionStates["a"].isPressed;
         bButton.isPressed = actionStates["b"].isPressed;
