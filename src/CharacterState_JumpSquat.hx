@@ -4,6 +4,7 @@ class CharacterState_JumpSquat extends CharacterState {
 
         name = "jumpSquat";
 
+        addTransition("airDodge", function() { return me.input.lButton.isPressed && me.stateFrame >= me.jumpSquatFrames; });
         addTransition("airborne", function() { return me.stateFrame >= me.jumpSquatFrames; });
     }
 

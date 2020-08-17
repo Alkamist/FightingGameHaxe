@@ -13,7 +13,7 @@ class CharacterState_Idle extends CharacterState {
     override public function enter() {
         super.enter();
 
-        if (me.statePrevious == "airborne") {
+        if (me.statePrevious == "airborne" || me.statePrevious == "airDodge") {
             me.y = 0.0;
             me.yVelocity = 0.0;
             me.airJumpsLeft = me.airJumps;

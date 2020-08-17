@@ -85,6 +85,7 @@ class Character {
         input.update();
         applyControllerState(controllerState);
 
+        // Update helper variables.
         xAxis = input.xAxis;
         yAxis = input.yAxis;
         shouldJump = input.xButton.justPressed || input.yButton.justPressed;
@@ -172,7 +173,23 @@ class Character {
     }
 
     public function handleGravity() {
-        yVelocity -= Math.min(gravity, fallVelocity + yVelocity);
+        yVelocity -= Math.max(Math.min(gravity, fallVelocity + yVelocity), 0.0);
+    }
+
+    public function handleGroundedJump() {
+        // Handle changing horizontal velocity when jumping off of the ground based on stick x axis.
+        xVelocity = (xVelocity * jumpVelocityDampening) + (xAxis.value * jumpStartHorizontalVelocity);
+        if (Math.abs(xVelocity) > jumpMaxHorizontalVelocity) {
+            xVelocity = sign(xVelocity) * jumpMaxHorizontalVelocity;
+        }
+
+        // Handle short hopping and full hopping.
+        if (jumpIsActive) {
+            yVelocity = fullHopVelocity;
+        }
+        else {
+            yVelocity = shortHopVelocity;
+        }
     }
 
     public function handleAirJumps() {

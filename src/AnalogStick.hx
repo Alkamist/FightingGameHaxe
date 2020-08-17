@@ -20,6 +20,16 @@ class AnalogStick {
             }
         }
 
+    public var angle(get, never): Float;
+        function get_angle() {
+            if (xAxis.value != 0 || yAxis.value != 0) {
+                return Math.atan2(yAxis.value, xAxis.value);
+            }
+            else {
+                return 0.0;
+            }
+        }
+
     public function new() {}
 
     public function update() {
