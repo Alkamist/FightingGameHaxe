@@ -27,7 +27,16 @@ class ControllerState {
         cYAxis = cStick.yAxis;
     }
 
-    public function update(): Void {
+    public function clampStickMagnitudes(value: Float) {
+        if (leftStick.magnitude > value) {
+			leftStick.magnitude = value;
+		}
+		if (cStick.magnitude > value) {
+			cStick.magnitude = value;
+		}
+    }
+
+    public function update() {
         leftStick.update();
         cStick.update();
         aButton.update();

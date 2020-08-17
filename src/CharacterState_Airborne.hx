@@ -30,16 +30,12 @@ class CharacterState_Airborne extends CharacterState {
     override public function update() {
         super.update();
 
-        // Handle extra jumps.
-        if (me.shouldJump && me.extraJumpsLeft > 0) {
-            me.xVelocity = me.xAxis.value * me.extraJumpHorizontalAxisMultiplier;
-            me.yVelocity = me.fullHopVelocity * me.extraJumpVelocityMultiplier;
-            me.extraJumpsLeft -= 1;
+        if (me.stateFrame >= 1) {
+            me.handleAirJumps();
+            me.handleHorizontalAirMovement();
+            me.handleFastFall();
+            me.handleGravity();
         }
-
-        me.handleHorizontalAirMovement();
-        me.handleFastFall();
-        me.handleGravity();
         me.moveWithVelocity();
     }
 

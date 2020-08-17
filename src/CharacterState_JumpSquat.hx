@@ -14,7 +14,7 @@ class CharacterState_JumpSquat extends CharacterState {
     override public function update() {
         super.update();
 
-        me.xVelocity = me.applyFriction(me.xVelocity, me.groundFriction);
+        me.xVelocity = me.applyFriction(me.xVelocity, me.groundFriction * 2.0);
         me.moveWithVelocity();
     }
 

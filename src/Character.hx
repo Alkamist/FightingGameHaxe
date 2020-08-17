@@ -22,9 +22,9 @@ class Character {
     public var fullHopVelocity = 3.68;
     public var fallVelocity = 2.8;
     public var fastFallVelocity = 3.4;
-    public var extraJumpVelocityMultiplier = 1.2;
-    public var extraJumpHorizontalAxisMultiplier = 0.9;
-    public var extraJumps = 1;
+    public var airJumpVelocityMultiplier = 1.2;
+    public var airJumpHorizontalAxisMultiplier = 0.9;
+    public var airJumps = 1;
     public var gravity = 0.23;
 
     public var dashBackFrameWindow = 2;
@@ -38,9 +38,14 @@ class Character {
     public var yVelocity = 0.0;
     public var xPrevious(default, null) = 0.0;
     public var yPrevious(default, null) = 0.0;
-    public var extraJumpsLeft = 1;
+    public var airJumpsLeft = 1;
     public var isFacingRight = true;
     public var wasFacingRight(default, null) = true;
+    public var facingDirection(get, never): Float;
+        function get_facingDirection() {
+            if (isFacingRight) return 1.0;
+            else return -1.0;
+        }
 
     public var justTurned(get, never): Bool;
         function get_justTurned() { return isFacingRight != wasFacingRight; }
@@ -59,8 +64,6 @@ class Character {
     public var stateMachine: CharacterStateMachine;
 
     // Helper variables.
-    public var xAxisActiveFrames = 0;
-    public var yAxisActiveFrames = 0;
     public var xAxis: AnalogAxis;
     public var yAxis: AnalogAxis;
     public var shouldJump: Bool;
@@ -74,7 +77,7 @@ class Character {
         stateMachine = new CharacterStateMachine(this);
     }
 
-    public function update(controllerState: ControllerState): Void {
+    public function update(controllerState: ControllerState) {
         wasFacingRight = isFacingRight;
         xPrevious = x;
         yPrevious = y;
@@ -88,44 +91,73 @@ class Character {
         jumpIsActive = input.xButton.isPressed || input.yButton.isPressed;
         xAxisIsForward = xAxis.isActive && (xAxis.value > 0.0 && isFacingRight || xAxis.value < 0.0 && !isFacingRight);
         xAxisIsBackward = xAxis.isActive && !xAxisIsForward;
-        xAxisSmashed = xAxis.magnitude > 0.8 && xAxisActiveFrames < 2;
-        yAxisSmashed = yAxis.magnitude > 0.6 && yAxisActiveFrames < 2;
+        xAxisSmashed = xAxis.magnitude > 0.8 && xAxis.activeFrames < 2;
+        yAxisSmashed = yAxis.magnitude > 0.6 && yAxis.activeFrames < 2;
 
         stateMachine.update();
-
-        if (xAxis.justActivated) {
-            xAxisActiveFrames = 0;
-        }
-        else if (xAxis.isActive) {
-            xAxisActiveFrames++;
-        }
-        else {
-            xAxisActiveFrames = 0;
-        }
-
-        if (yAxis.justActivated) {
-            yAxisActiveFrames = 0;
-        }
-        else if (yAxis.isActive) {
-            yAxisActiveFrames++;
-        }
-        else {
-            yAxisActiveFrames = 0;
-        }
     }
 
-    public function moveWithVelocity(): Void {
+    public function moveWithVelocity() {
         x += xVelocity;
         y += yVelocity;
     }
 
-    public function handleHorizontalAirMovement(): Void {
+    public function handleWalkMovement() {
+        var targetVelocity = walkMaxVelocity * xAxis.value;
+
+        if (Math.abs(xVelocity) > Math.abs(targetVelocity)) {
+            xVelocity = applyFriction(xVelocity, groundFriction);
+        }
+        else if (xAxis.isActive && stateFrame >= 1) {
+            //var accelerationFactor = 0.125;
+            //var biasWeight = 1.833333;
+            //var biasFactor = (accelerationFactor * biasWeight);
+            //var stickFactor = (2.0 * accelerationFactor * xAxis.magnitude) * (1.0 - biasWeight);
+            //var acceleration = (targetVelocity - xVelocity) * (biasFactor + stickFactor);
+
+            // This isn't quite right but close-ish, not sure what the real acceleration calculation is.
+            var acceleration = (targetVelocity - xVelocity) * 0.25 * xAxis.magnitude;
+
+            xVelocity += acceleration;
+
+            var goingLeftTooFast = targetVelocity < 0.0 && xVelocity < targetVelocity;
+            var goingRightTooFast = targetVelocity > 0.0 && xVelocity > targetVelocity;
+
+            if (goingLeftTooFast || goingRightTooFast) {
+                xVelocity = targetVelocity;
+            }
+        }
+    }
+
+    public function handleDashMovement() {
+        if (stateFrame == 1) {
+            xVelocity += dashStartVelocity * xAxis.direction;
+            if (Math.abs(xVelocity) > dashMaxVelocity) {
+                xVelocity = dashMaxVelocity * xAxis.direction;
+            }
+        }
+        if (stateFrame >= 1) {
+            if (!xAxis.isActive) {
+                xVelocity = applyFriction(xVelocity, groundFriction);
+            }
+            else {
+                xVelocity = applyAcceleration(xVelocity,
+                                                    xAxis,
+                                                    dashBaseAcceleration,
+                                                    dashAxisAcceleration,
+                                                    dashMaxVelocity,
+                                                    groundFriction);
+            }
+        }
+    }
+
+    public function handleHorizontalAirMovement() {
         if (!xAxis.isActive) {
             xVelocity = applyFriction(xVelocity, airFriction);
         }
         else {
             xVelocity = applyAcceleration(xVelocity,
-                                          xAxis.value,
+                                          xAxis,
                                           airBaseAcceleration,
                                           airAxisAcceleration,
                                           airMaxVelocity,
@@ -133,39 +165,47 @@ class Character {
         }
     }
 
-    public function handleFastFall(): Void {
+    public function handleFastFall() {
         if (yVelocity <= 0.0 && yAxis.value < 0.0 && yAxisSmashed) {
             yVelocity = -fastFallVelocity;
         }
     }
 
-    public function handleGravity(): Void {
+    public function handleGravity() {
         yVelocity -= Math.min(gravity, fallVelocity + yVelocity);
     }
 
-    public function applyFriction(velocity: Float, friction: Float): Float {
+    public function handleAirJumps() {
+        if (shouldJump && airJumpsLeft > 0) {
+            xVelocity = xAxis.value * airJumpHorizontalAxisMultiplier;
+            yVelocity = fullHopVelocity * airJumpVelocityMultiplier;
+            airJumpsLeft -= 1;
+        }
+    }
+
+    public function applyFriction(velocity: Float, friction: Float) {
         return velocity - sign(velocity) * Math.min(Math.abs(velocity), friction);
     }
 
     public function applyAcceleration(velocity: Float,
-                                      axisValue: Float,
+                                      axis: AnalogAxis,
                                       baseAcceleration: Float,
                                       axisAcceleration: Float,
                                       maxVelocity: Float,
-                                      friction: Float): Float {
+                                      friction: Float) {
         var baseVelocity = velocity;
 
         if (Math.abs(baseVelocity) > maxVelocity) {
             baseVelocity = applyFriction(baseVelocity, friction);
         }
 
-        var additionalVelocity = sign(axisValue) * baseAcceleration + axisValue * axisAcceleration;
+        var additionalVelocity = axis.direction * baseAcceleration + axis.value * axisAcceleration;
 
-        if (axisValue > 0.0) {
+        if (axis.value > 0.0) {
             additionalVelocity = Math.min(additionalVelocity, maxVelocity - baseVelocity);
             additionalVelocity = Math.max(0.0, additionalVelocity);
         }
-        else if (axisValue < 0.0) {
+        else if (axis.value < 0.0) {
             additionalVelocity = Math.max(additionalVelocity, -maxVelocity - baseVelocity);
             additionalVelocity = Math.min(0.0, additionalVelocity);
         }
@@ -176,7 +216,7 @@ class Character {
         return baseVelocity + additionalVelocity;
     }
 
-    public function sign(value: Float): Float {
+    public function sign(value: Float) {
         if (value >= 0.0) return 1.0;
         else return -1.0;
     }
@@ -198,5 +238,6 @@ class Character {
         input.dRightButton.isPressed = controllerState.dRightButton.isPressed;
         input.dDownButton.isPressed = controllerState.dDownButton.isPressed;
         input.dUpButton.isPressed = controllerState.dUpButton.isPressed;
+        input.clampStickMagnitudes(1.0);
     }
 }

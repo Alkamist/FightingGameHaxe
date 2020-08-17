@@ -16,7 +16,7 @@ class CharacterState_Idle extends CharacterState {
         if (me.statePrevious == "airborne") {
             me.y = 0.0;
             me.yVelocity = 0.0;
-            me.extraJumpsLeft = me.extraJumps;
+            me.airJumpsLeft = me.airJumps;
         }
     }
 

@@ -62,7 +62,7 @@ class KeyboardController extends ControllerState {
         cXAxis.setValueFromStates(actionStates["cLeft"].isPressed, actionStates["cRight"].isPressed);
         cYAxis.setValueFromStates(actionStates["cDown"].isPressed, actionStates["cUp"].isPressed);
 
-        //xAxis.value *= 0.3;
+        //xAxis.value *= 0.5;
 
         aButton.isPressed = actionStates["a"].isPressed;
         bButton.isPressed = actionStates["b"].isPressed;
@@ -76,5 +76,7 @@ class KeyboardController extends ControllerState {
         dRightButton.isPressed = actionStates["dRight"].isPressed;
         dDownButton.isPressed = actionStates["dDown"].isPressed;
         dUpButton.isPressed = actionStates["dUp"].isPressed;
+
+        clampStickMagnitudes(1.0);
     }
 }

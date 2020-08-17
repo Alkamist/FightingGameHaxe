@@ -1,6 +1,5 @@
-import hxd.res.Font;
-import h3d.Vector;
 import h3d.scene.Object;
+import h3d.Vector;
 import h3d.prim.ModelCache;
 
 import h2d.Font;
@@ -20,6 +19,7 @@ class Main extends hxd.App {
     var stateText: Text;
     var stateFrameText: Text;
     var velocityText: Text;
+    var stickText: Text;
 
     var isPaused = false;
 
@@ -30,6 +30,7 @@ class Main extends hxd.App {
         playerModel = foxModel;
         cache.dispose();
 
+        //s3d.lightSystem.ambientLight.set(1.0, 1.0, 1.0);
         s3d.lightSystem.ambientLight.set(1.0, 1.0, 1.0);
 
         s3d.camera.target.set(0.0, 0.0, 25.0);
@@ -55,6 +56,12 @@ class Main extends hxd.App {
         velocityText.x = stateText.x - 200;
         velocityText.y = stateText.y;
 
+        stickText = new Text(textFont, s2d);
+        stickText.textAlign = Center;
+        stickText.scale(2.0);
+        stickText.x = velocityText.x;
+        stickText.y = velocityText.y - 50;
+
         playerController = new KeyboardController(hxd.Window.getInstance());
     }
 
@@ -64,7 +71,7 @@ class Main extends hxd.App {
 
         // Update the visual position of the player model.
         if (isPaused) {
-            playerPosition.interpolation = 0.0;
+            playerPosition.interpolation = 1.0;
         }
         else {
             playerPosition.interpolation = fixedTimestep.physicsFraction;
@@ -85,11 +92,13 @@ class Main extends hxd.App {
             frameAdvance = true;
         }
 
+        stickText.text = floatToStringPrecision(playerController.xAxis.value, 5) + ", " + floatToStringPrecision(playerController.yAxis.value, 5);
+
         if (!isPaused || frameAdvance) {
             player.update(playerController);
             stateText.text = player.state;
             stateFrameText.text = Std.string(player.stateFrame);
-            velocityText.text = floatToStringPrecision(player.xVelocity, 3) + ", " + floatToStringPrecision(player.yVelocity, 3);
+            velocityText.text = floatToStringPrecision(player.xVelocity, 5) + ", " + floatToStringPrecision(player.yVelocity, 5);
 
             playerPosition.x = player.x;
             playerPosition.y = player.y;

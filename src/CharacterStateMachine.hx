@@ -36,8 +36,6 @@ class CharacterStateMachine {
     }
 
     public function update() {
-        realState.update();
-
         // Handle transitions.
         for (stateName in realState.transitionOrder) {
             var transitionCondition = realState.transitions[stateName]();
@@ -46,6 +44,8 @@ class CharacterStateMachine {
                 break;
             }
         }
+
+        realState.update();
 
         stateFrame++;
     }

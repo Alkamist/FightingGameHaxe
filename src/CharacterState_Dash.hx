@@ -21,25 +21,7 @@ class CharacterState_Dash extends CharacterState {
         super.update();
 
         // Handle dash movement.
-        if (me.stateFrame == 1) {
-            me.xVelocity += me.dashStartVelocity * me.xAxis.sign;
-            if (Math.abs(me.xVelocity) > me.dashMaxVelocity) {
-                me.xVelocity = me.dashMaxVelocity * me.xAxis.sign;
-            }
-        }
-        if (me.stateFrame >= 1) {
-            if (!me.xAxis.isActive) {
-                me.xVelocity = me.applyFriction(me.xVelocity, me.groundFriction);
-            }
-            else {
-                me.xVelocity = me.applyAcceleration(me.xVelocity,
-                                                    me.xAxis.value,
-                                                    me.dashBaseAcceleration,
-                                                    me.dashAxisAcceleration,
-                                                    me.dashMaxVelocity,
-                                                    me.groundFriction);
-            }
-        }
+        me.handleDashMovement();
         me.moveWithVelocity();
     }
 

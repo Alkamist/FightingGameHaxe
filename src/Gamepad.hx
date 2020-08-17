@@ -46,13 +46,6 @@ class Gamepad extends ControllerState {
 		cXAxis.value = convertAxisValue(heapsPad.values[heapsPadConfig.ranalogX], cXAxisCalibration);
 		cYAxis.value = convertAxisValue(heapsPad.values[heapsPadConfig.ranalogY], cYAxisCalibration);
 
-		if (leftStick.magnitude > 1.0) {
-			leftStick.magnitude = 1.0;
-		}
-		if (cStick.magnitude > 1.0) {
-			cStick.magnitude = 1.0;
-		}
-
 		aButton.isPressed = heapsPad.buttons[heapsPadConfig.A];
 		bButton.isPressed = heapsPad.buttons[heapsPadConfig.B];
 		xButton.isPressed = heapsPad.buttons[heapsPadConfig.X];
@@ -65,6 +58,8 @@ class Gamepad extends ControllerState {
 		dRightButton.isPressed = heapsPad.buttons[heapsPadConfig.dpadRight];
 		dDownButton.isPressed = heapsPad.buttons[heapsPadConfig.dpadDown];
 		dUpButton.isPressed = heapsPad.buttons[heapsPadConfig.dpadUp];
+
+		clampStickMagnitudes(1.0);
 	}
 
 	function convertAxisValue(value: Float, calibration: Float) {

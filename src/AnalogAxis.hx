@@ -19,11 +19,11 @@ class AnalogAxis {
             else return 1.0;
         }
 
-    public var normalizedValue: Float;
-        function get_normalizedValue() {
+    public var direction(get, never): Float;
+        function get_direction() {
             if (value > 0.0) return 1.0;
-            if (value < 0.0) return -1.0;
-            else return value;
+            else if (value < 0.0) return -1.0;
+            else return 0.0;
         }
 
     public var isActive(get, never): Bool;
@@ -44,6 +44,8 @@ class AnalogAxis {
             return (value < 0.0 && valuePrevious >= 0.0)
                 || (value > 0.0 && valuePrevious <= 0.0);
         }
+
+    public var activeFrames = 0;
 
     public function new() {}
 
@@ -70,6 +72,16 @@ class AnalogAxis {
     }
 
     public function update() {
+        if (justActivated) {
+            activeFrames = 0;
+        }
+        else if (isActive) {
+            activeFrames++;
+        }
+        else {
+            activeFrames = 0;
+        }
+
         valuePrevious = value;
         wasActive = isActive;
     }
