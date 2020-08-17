@@ -1,10 +1,17 @@
 class CharacterState_Walk extends CharacterState {
     override public function new(character: Character) {
         super(character);
+
         name = "walk";
+
+        addTransition("jumpSquat", function() { return me.shouldJump; });
+        addTransition("dash", function() { return me.xAxisIsForward && me.xAxisSmashed; });
+        addTransition("idle", function() { return !me.xAxisIsForward; });
     }
 
-    override public function enter() { super.enter(); }
+    override public function enter() {
+        super.enter();
+    }
 
     override public function update() {
         super.update();
@@ -26,19 +33,9 @@ class CharacterState_Walk extends CharacterState {
             }
         }
         me.moveWithVelocity();
-
-        if (me.shouldJump) {
-            me.state = "jumpSquat";
-        }
-        else if (me.xAxisIsForward) {
-            if (me.xAxisSmashed) {
-                me.state = "dash";
-            }
-        }
-        else {
-            me.state = "idle";
-        }
     }
 
-    override public function exit () { super.exit(); }
+    override public function exit() {
+        super.exit();
+    }
 }

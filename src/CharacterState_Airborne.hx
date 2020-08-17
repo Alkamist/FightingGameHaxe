@@ -1,11 +1,30 @@
 class CharacterState_Airborne extends CharacterState {
     override public function new(character: Character) {
         super(character);
+
         name = "airborne";
+
+        addTransition("idle", function() { return me.y < 0.0; });
     }
 
     override public function enter() {
         super.enter();
+
+        if (me.statePrevious == "jumpSquat") {
+            // Handle changing horizontal velocity when jumping off of the ground based on stick x axis.
+            me.xVelocity = (me.xVelocity * me.jumpVelocityDampening) + (me.xAxis.value * me.jumpStartHorizontalVelocity);
+            if (Math.abs(me.xVelocity) > me.jumpMaxHorizontalVelocity) {
+                me.xVelocity = me.sign(me.xVelocity) * me.jumpMaxHorizontalVelocity;
+            }
+
+            // Handle short hopping and full hopping.
+            if (me.jumpIsActive) {
+                me.yVelocity = me.fullHopVelocity;
+            }
+            else {
+                me.yVelocity = me.shortHopVelocity;
+            }
+        }
     }
 
     override public function update() {
@@ -22,14 +41,9 @@ class CharacterState_Airborne extends CharacterState {
         me.handleFastFall();
         me.handleGravity();
         me.moveWithVelocity();
-
-        if (me.y < 0.0) {
-            me.y = 0.0;
-            me.yVelocity = 0.0;
-            me.state = "idle";
-            me.extraJumpsLeft = me.extraJumps;
-        }
     }
 
-    override public function exit () { super.exit(); }
+    override public function exit() {
+        super.exit();
+    }
 }

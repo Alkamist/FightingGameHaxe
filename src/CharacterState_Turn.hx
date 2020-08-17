@@ -1,7 +1,13 @@
 class CharacterState_Turn extends CharacterState {
     override public function new(character: Character) {
         super(character);
+
         name = "turn";
+
+        addTransition("jumpSquat", function() { return me.shouldJump; });
+        addTransition("dash", function() { return me.xAxisIsBackward && me.xAxisSmashed; });
+        addTransition("walk", function() { return me.xAxisIsForward && me.stateFrame >= me.turnFrames; });
+        addTransition("idle", function() { return me.stateFrame >= me.turnFrames; });
     }
 
     override public function enter() {
@@ -18,28 +24,13 @@ class CharacterState_Turn extends CharacterState {
         if (me.stateFrame > 1) {
             me.xVelocity = me.applyFriction(me.xVelocity, me.groundFriction * 2.0);
         }
-
+        if (me.xAxisIsBackward && me.stateFrame == me.slowDashBackFrames) {
+            me.isFacingRight = !me.isFacingRight;
+        }
         me.moveWithVelocity();
-
-        if (me.shouldJump) {
-            me.state = "jumpSquat";
-        }
-        else if (me.xAxisIsBackward) {
-            if (me.xAxisSmashed) {
-                me.isFacingRight = !me.isFacingRight;
-                me.state = "dash";
-            }
-            else if (me.stateFrame == me.slowDashBackFrames) {
-                me.isFacingRight = !me.isFacingRight;
-            }
-        }
-        else if (me.xAxisIsForward && me.stateFrame >= me.turnFrames) {
-            me.state = "walk";
-        }
-        else if (me.stateFrame >= me.turnFrames) {
-            me.state = "idle";
-        }
     }
 
-    override public function exit () { super.exit(); }
+    override public function exit() {
+        super.exit();
+    }
 }
