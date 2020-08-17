@@ -31,6 +31,8 @@ class CharacterStateMachine {
         addState(CharacterState_JumpSquat);
         addState(CharacterState_Airborne);
         addState(CharacterState_AirDodge);
+        addState(CharacterState_Land);
+        addState(CharacterState_LandSpecial);
 
         realState = realStates["idle"];
         realStatePrevious = realStates["idle"];

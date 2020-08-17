@@ -96,6 +96,13 @@ class Character {
         yAxisSmashed = yAxis.magnitude > 0.6 && yAxis.activeFrames < 2;
 
         stateMachine.update();
+
+        // Extremely basic ground collision logic for now.
+        if (y < 0.0) {
+            y = 0.0;
+            yVelocity = 0.0;
+            land();
+        }
     }
 
     public function moveWithVelocity() {
@@ -107,7 +114,7 @@ class Character {
         var targetVelocity = walkMaxVelocity * xAxis.value;
 
         if (Math.abs(xVelocity) > Math.abs(targetVelocity)) {
-            xVelocity = applyFriction(xVelocity, groundFriction);
+            xVelocity = applyFriction(xVelocity, groundFriction * 2.0);
         }
         else if (xAxis.isActive && stateFrame >= 1) {
             //var accelerationFactor = 0.125;
@@ -197,6 +204,15 @@ class Character {
             xVelocity = xAxis.value * airJumpHorizontalAxisMultiplier;
             yVelocity = fullHopVelocity * airJumpVelocityMultiplier;
             airJumpsLeft -= 1;
+        }
+    }
+
+    public function land() {
+        if (state == "airborne") {
+            state = "land";
+        }
+        if (state == "airDodge") {
+            state = "landSpecial";
         }
     }
 
