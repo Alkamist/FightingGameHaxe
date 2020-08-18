@@ -250,6 +250,6 @@ class Character {
         input.dRightButton.isPressed = controllerState.dRightButton.isPressed;
         input.dDownButton.isPressed = controllerState.dDownButton.isPressed;
         input.dUpButton.isPressed = controllerState.dUpButton.isPressed;
-        input.clampStickMagnitudes(1.0);
+        input.convertToMeleeValues();
     }
 }

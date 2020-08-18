@@ -11,7 +11,10 @@ class Main extends hxd.App {
     var player = new Character();
     var playerModel: Object;
     var playerPosition = new InterpolatedPosition();
-    var playerController: KeyboardController;
+
+    var keyboardController: KeyboardController;
+    var gamepadManager: GamepadManager;
+    var currentController: ControllerState;
 
     var fixedTimestep = new FixedTimestep();
 
@@ -62,7 +65,9 @@ class Main extends hxd.App {
         stickText.x = velocityText.x;
         stickText.y = velocityText.y - 50;
 
-        playerController = new KeyboardController(hxd.Window.getInstance());
+        keyboardController = new KeyboardController(hxd.Window.getInstance());
+        gamepadManager = new GamepadManager();
+        currentController = keyboardController;
     }
 
     override function update(dt: Float) {
@@ -81,21 +86,28 @@ class Main extends hxd.App {
     }
 
     function physicsUpdate() {
-        playerController.update();
+        keyboardController.update();
+        gamepadManager.update();
+
+        for (gamepad in gamepadManager.gamepads) {
+            if (gamepad.dUpButton.justPressed) {
+                currentController = gamepad;
+            }
+        }
 
         var frameAdvance = false;
 
-        if (playerController.startButton.justPressed) {
+        if (currentController.startButton.justPressed) {
             isPaused = !isPaused;
         }
-        if (isPaused && playerController.zButton.justPressed) {
+        if (isPaused && currentController.zButton.justPressed) {
             frameAdvance = true;
         }
 
-        stickText.text = floatToStringPrecision(playerController.xAxis.value, 5) + ", " + floatToStringPrecision(playerController.yAxis.value, 5);
+        stickText.text = floatToStringPrecision(currentController.xAxis.value, 4) + ", " + floatToStringPrecision(currentController.yAxis.value, 4);
 
         if (!isPaused || frameAdvance) {
-            player.update(playerController);
+            player.update(currentController);
             stateText.text = player.state;
             stateFrameText.text = Std.string(player.stateFrame);
             velocityText.text = floatToStringPrecision(player.xVelocity, 5) + ", " + floatToStringPrecision(player.yVelocity, 5);

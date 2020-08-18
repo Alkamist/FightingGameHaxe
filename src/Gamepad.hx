@@ -14,43 +14,31 @@ class Gamepad extends ControllerState {
 		super();
 		this.heapsPad = heapsPad;
 
-		// vJoy analog axes seem to return NaN for some reason.
-		//if (StringTools.contains(heapsPad.name.toLowerCase(), "vjoy")) {
-		//	heapsPadConfig.A = 0;
-		//	heapsPadConfig.B = 1;
-		//	heapsPadConfig.X = 2;
-		//	heapsPadConfig.Y = 3;
-		//	heapsPadConfig.RB = 4;
-		//	heapsPadConfig.start = 7;
-		//	heapsPadConfig.dpadLeft = 10;
-		//	heapsPadConfig.dpadRight = 11;
-		//	heapsPadConfig.dpadDown = 9;
-		//	heapsPadConfig.dpadUp = 8;
-		//}
-
-		calibrate();
+		//calibrate();
 	}
 
-	public function calibrate() {
-		xAxisCalibration = safeAnalogValue(heapsPad.values[heapsPadConfig.analogX]);
-		yAxisCalibration = safeAnalogValue(heapsPad.values[heapsPadConfig.analogY]);
-		cXAxisCalibration = safeAnalogValue(heapsPad.values[heapsPadConfig.ranalogX]);
-		cYAxisCalibration = safeAnalogValue(heapsPad.values[heapsPadConfig.ranalogY]);
-	}
+	//public function calibrate() {
+	//	xAxisCalibration = safeAnalogValue(heapsPad.values[heapsPadConfig.analogX]);
+	//	yAxisCalibration = safeAnalogValue(heapsPad.values[heapsPadConfig.analogY]);
+	//	cXAxisCalibration = safeAnalogValue(heapsPad.values[heapsPadConfig.ranalogX]);
+	//	cYAxisCalibration = safeAnalogValue(heapsPad.values[heapsPadConfig.ranalogY]);
+	//}
 
 	override function update() {
 		super.update();
 
-		xAxis.value = convertAxisValue(heapsPad.values[heapsPadConfig.analogX], xAxisCalibration);
-		yAxis.value = convertAxisValue(heapsPad.values[heapsPadConfig.analogY], yAxisCalibration);
-		cXAxis.value = convertAxisValue(heapsPad.values[heapsPadConfig.ranalogX], cXAxisCalibration);
-		cYAxis.value = convertAxisValue(heapsPad.values[heapsPadConfig.ranalogY], cYAxisCalibration);
+		xAxis.value = calibratedValue(heapsPad.values[heapsPadConfig.analogX], xAxisCalibration);
+		yAxis.value = calibratedValue(heapsPad.values[heapsPadConfig.analogY], yAxisCalibration);
+		cXAxis.value = calibratedValue(heapsPad.values[heapsPadConfig.ranalogX], cXAxisCalibration);
+		cYAxis.value = calibratedValue(heapsPad.values[heapsPadConfig.ranalogY], cYAxisCalibration);
 
 		aButton.isPressed = heapsPad.buttons[heapsPadConfig.A];
 		bButton.isPressed = heapsPad.buttons[heapsPadConfig.B];
 		xButton.isPressed = heapsPad.buttons[heapsPadConfig.X];
 		yButton.isPressed = heapsPad.buttons[heapsPadConfig.Y];
 		zButton.isPressed = heapsPad.buttons[heapsPadConfig.RB];
+		lButton.isPressed = heapsPad.buttons[heapsPadConfig.LB];
+		rButton.isPressed = heapsPad.buttons[heapsPadConfig.ranalogClick];
 
 		startButton.isPressed = heapsPad.buttons[heapsPadConfig.start];
 
@@ -59,20 +47,22 @@ class Gamepad extends ControllerState {
 		dDownButton.isPressed = heapsPad.buttons[heapsPadConfig.dpadDown];
 		dUpButton.isPressed = heapsPad.buttons[heapsPadConfig.dpadUp];
 
-		clampStickMagnitudes(1.0);
+		xAxis.value = Math.min(Math.max(xAxis.value * axisScale, -1.0), 1.0);
+		yAxis.value = Math.min(Math.max(yAxis.value * axisScale, -1.0), 1.0);
+
+		convertToMeleeValues();
 	}
 
-	function convertAxisValue(value: Float, calibration: Float) {
-		var calibratedValue = safeAnalogValue(value) - calibration;
-		var scaledValue = calibratedValue * axisScale;
-		//var calibratedValue = scaledValue - calibration;
-		//if (scaledValue >= 0.0) {
-		//	calibratedValue *= Math.abs(1.0 - calibration);
+	function calibratedValue(value: Float, calibration: Float) {
+		//var centeredValue = safeAnalogValue(value) - calibration;
+		//if (centeredValue >= 0.0) {
+		//	centeredValue *= Math.abs(1.0 - calibration);
 		//}
 		//else {
-		//	calibratedValue *= Math.abs(-1.0 - calibration);
+		//	centeredValue *= Math.abs(-1.0 - calibration);
 		//}
-		return scaledValue;
+		//return centeredValue;
+		return value;
 	}
 
 	function safeAnalogValue(value: Float) {

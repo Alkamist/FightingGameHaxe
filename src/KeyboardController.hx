@@ -77,6 +77,6 @@ class KeyboardController extends ControllerState {
         dDownButton.isPressed = actionStates["dDown"].isPressed;
         dUpButton.isPressed = actionStates["dUp"].isPressed;
 
-        clampStickMagnitudes(1.0);
+        convertToMeleeValues();
     }
 }

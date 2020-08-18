@@ -32,6 +32,28 @@ class AnalogStick {
 
     public function new() {}
 
+    public function convertToMeleeValues() {
+        if (magnitude > 1.0) {
+            function convertAxis(axis: AnalogAxis) {
+                var axisMagnitude = axis.magnitude;
+                var axisRound = Math.round(axis.value * 80.0) / 80.0;
+                if (Math.abs(axisRound) > axisMagnitude) {
+                    axis.value = axis.sign * Math.floor(axisMagnitude * 80.0) / 80.0;
+                }
+                else {
+                    axis.value = axisRound;
+                }
+            }
+            magnitude = 1.0;
+            convertAxis(xAxis);
+            convertAxis(yAxis);
+        }
+        else {
+            xAxis.value = Math.round(xAxis.value * 80.0) / 80.0;
+            yAxis.value = Math.round(yAxis.value * 80.0) / 80.0;
+        }
+    }
+
     public function update() {
         xAxis.update();
         yAxis.update();

@@ -27,13 +27,9 @@ class ControllerState {
         cYAxis = cStick.yAxis;
     }
 
-    public function clampStickMagnitudes(value: Float) {
-        if (leftStick.magnitude > value) {
-			leftStick.magnitude = value;
-		}
-		if (cStick.magnitude > value) {
-			cStick.magnitude = value;
-		}
+    public function convertToMeleeValues() {
+        leftStick.convertToMeleeValues();
+        cStick.convertToMeleeValues();
     }
 
     public function update() {

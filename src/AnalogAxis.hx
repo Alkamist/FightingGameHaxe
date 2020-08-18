@@ -1,8 +1,8 @@
 class AnalogAxis {
-    public var value(default, set) = 0.0;
-        function set_value(input: Float) {
-            return value = Math.min(Math.max(input, -1.0), 1.0);
-        }
+    public var value = 0.0;
+        //function set_value(input: Float) {
+        //    var clampedValue = Math.min(Math.max(input, -1.0), 1.0);
+        //}
 
     public var valuePrevious(default, null) = 0.0;
     public var deadZone = 0.2875;
