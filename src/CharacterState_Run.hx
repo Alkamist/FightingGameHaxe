@@ -16,7 +16,9 @@ class CharacterState_Run extends CharacterState {
     override public function update() {
         super.update();
 
-        me.handleDashMovement();
+        var runAcceleration = ((me.dashMaxVelocity * me.xAxis.value) - me.xVelocity) * (1.0 / (2.5 * me.dashMaxVelocity)) * (me.dashAxisAcceleration + (me.dashBaseAcceleration / me.xAxis.magnitude));
+        me.xVelocity += runAcceleration;
+
         me.moveWithVelocity();
     }
 

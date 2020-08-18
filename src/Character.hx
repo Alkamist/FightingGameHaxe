@@ -1,5 +1,6 @@
 class Character {
     public var groundFriction = 0.08;
+
     public var dashStartVelocity = 1.9;
     public var dashMaxVelocity = 2.2;
     public var dashBaseAcceleration = 0.02;
@@ -29,6 +30,7 @@ class Character {
 
     //public var dashBackFrameWindow = 2;
     public var dashMinimumFrames = 11;
+    public var dashMaximumFrames = 21;
     public var slowDashBackFrames = 5;
     public var turnFrames = 11;
     public var runTurnFrames = 30;
@@ -65,18 +67,26 @@ class Character {
     public var input = new ControllerState();
     public var stateMachine: CharacterStateMachine;
 
-    // Helper variables.
     public var xAxis: AnalogAxis;
     public var yAxis: AnalogAxis;
-    public var shouldJump: Bool;
-    public var jumpIsActive: Bool;
-    public var xAxisIsForward: Bool;
-    public var xAxisIsBackward: Bool;
-    public var xAxisSmashed: Bool;
-    public var yAxisSmashed: Bool;
+
+    public var shouldJump(get, never): Bool;
+        function get_shouldJump() { return input.xButton.justPressed || input.yButton.justPressed; }
+    public var jumpIsActive(get, never): Bool;
+        function get_jumpIsActive() { return input.xButton.isPressed || input.yButton.isPressed; }
+    public var xAxisIsForward(get, never): Bool;
+        function get_xAxisIsForward() { return xAxis.isActive && (xAxis.value > 0.0 && isFacingRight || xAxis.value < 0.0 && !isFacingRight); }
+    public var xAxisIsBackward(get, never): Bool;
+        function get_xAxisIsBackward() { return xAxis.isActive && !xAxisIsForward; }
+    public var xAxisSmashed(get, never): Bool;
+        function get_xAxisSmashed() { return xAxis.magnitude >= 0.8 && xAxis.activeFrames < 2; }
+    public var yAxisSmashed(get, never): Bool;
+        function get_yAxisSmashed() { return yAxis.magnitude >= 0.6625 && yAxis.activeFrames < 2; }
 
     public function new() {
         stateMachine = new CharacterStateMachine(this);
+        xAxis = input.xAxis;
+        yAxis = input.yAxis;
     }
 
     public function update(controllerState: ControllerState) {
@@ -86,16 +96,6 @@ class Character {
 
         input.update();
         applyControllerState(controllerState);
-
-        // Update helper variables.
-        xAxis = input.xAxis;
-        yAxis = input.yAxis;
-        shouldJump = input.xButton.justPressed || input.yButton.justPressed;
-        jumpIsActive = input.xButton.isPressed || input.yButton.isPressed;
-        xAxisIsForward = xAxis.isActive && (xAxis.value > 0.0 && isFacingRight || xAxis.value < 0.0 && !isFacingRight);
-        xAxisIsBackward = xAxis.isActive && !xAxisIsForward;
-        xAxisSmashed = xAxis.magnitude >= 0.8 && xAxis.activeFrames < 2;
-        yAxisSmashed = yAxis.magnitude >= 0.6625 && yAxis.activeFrames < 2;
 
         stateMachine.update();
 
@@ -136,20 +136,6 @@ class Character {
             if (goingLeftTooFast || goingRightTooFast) {
                 xVelocity = targetVelocity;
             }
-        }
-    }
-
-    public function handleDashMovement() {
-        if (!xAxis.isActive) {
-            xVelocity = applyFriction(xVelocity, groundFriction);
-        }
-        else {
-            xVelocity = applyAcceleration(xVelocity,
-                                                xAxis,
-                                                dashBaseAcceleration,
-                                                dashAxisAcceleration,
-                                                dashMaxVelocity,
-                                                groundFriction);
         }
     }
 
@@ -220,27 +206,26 @@ class Character {
                                       axisAcceleration: Float,
                                       maxVelocity: Float,
                                       friction: Float) {
-        var baseVelocity = velocity;
+        var newVelocity = velocity;
 
-        if (Math.abs(baseVelocity) > maxVelocity) {
-            baseVelocity = applyFriction(baseVelocity, friction);
+        if (Math.abs(velocity) > maxVelocity) {
+            newVelocity = applyFriction(velocity, friction);
         }
 
-        var additionalVelocity = axis.direction * baseAcceleration + axis.value * axisAcceleration;
+        var acceleration = axis.direction * baseAcceleration + axis.value * axisAcceleration;
 
         if (axis.value > 0.0) {
-            additionalVelocity = Math.min(additionalVelocity, maxVelocity - baseVelocity);
-            additionalVelocity = Math.max(0.0, additionalVelocity);
+            acceleration = Math.min(acceleration, maxVelocity - newVelocity);
+            acceleration = Math.max(0.0, acceleration);
+            newVelocity += acceleration;
         }
         else if (axis.value < 0.0) {
-            additionalVelocity = Math.max(additionalVelocity, -maxVelocity - baseVelocity);
-            additionalVelocity = Math.min(0.0, additionalVelocity);
-        }
-        else {
-            additionalVelocity = 0.0;
+            acceleration = Math.max(acceleration, -maxVelocity - newVelocity);
+            acceleration = Math.min(0.0, acceleration);
+            newVelocity += acceleration;
         }
 
-        return baseVelocity + additionalVelocity;
+        return newVelocity;
     }
 
     public function sign(value: Float) {
