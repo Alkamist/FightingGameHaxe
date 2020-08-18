@@ -4,7 +4,11 @@ class CharacterState_LandSpecial extends CharacterState {
 
         name = "landSpecial";
 
-        addTransition("idle", function() { return me.stateFrame >= 8; });
+        addTransition("jumpSquat", function() { return me.shouldJump && me.stateFrame >= 9; });
+        addTransition("dash", function() { return me.xAxisIsForward && me.xAxisSmashed && me.stateFrame >= 9; });
+        addTransition("walk", function() { return me.xAxisIsForward && !me.xAxisSmashed && me.stateFrame >= 9; });
+        addTransition("turn", function() { return me.xAxisIsBackward && me.stateFrame >= 9; });
+        addTransition("idle", function() { return !me.xAxis.isActive && me.stateFrame >= 9; });
     }
 
     override public function enter() {

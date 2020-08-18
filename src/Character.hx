@@ -27,10 +27,12 @@ class Character {
     public var airJumps = 1;
     public var gravity = 0.23;
 
-    public var dashBackFrameWindow = 2;
-    public var dashMinimumFrames = 21;
+    //public var dashBackFrameWindow = 2;
+    public var dashMinimumFrames = 11;
     public var slowDashBackFrames = 5;
     public var turnFrames = 11;
+    public var runTurnFrames = 30;
+    public var runBrakeFrames = 18;
 
     public var x = 0.0;
     public var y = 0.0;
@@ -138,24 +140,16 @@ class Character {
     }
 
     public function handleDashMovement() {
-        if (stateFrame == 1) {
-            xVelocity += dashStartVelocity * xAxis.direction;
-            if (Math.abs(xVelocity) > dashMaxVelocity) {
-                xVelocity = dashMaxVelocity * xAxis.direction;
-            }
+        if (!xAxis.isActive) {
+            xVelocity = applyFriction(xVelocity, groundFriction);
         }
-        if (stateFrame >= 1) {
-            if (!xAxis.isActive) {
-                xVelocity = applyFriction(xVelocity, groundFriction);
-            }
-            else {
-                xVelocity = applyAcceleration(xVelocity,
-                                                    xAxis,
-                                                    dashBaseAcceleration,
-                                                    dashAxisAcceleration,
-                                                    dashMaxVelocity,
-                                                    groundFriction);
-            }
+        else {
+            xVelocity = applyAcceleration(xVelocity,
+                                                xAxis,
+                                                dashBaseAcceleration,
+                                                dashAxisAcceleration,
+                                                dashMaxVelocity,
+                                                groundFriction);
         }
     }
 

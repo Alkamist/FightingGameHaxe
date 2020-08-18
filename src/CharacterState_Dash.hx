@@ -4,9 +4,9 @@ class CharacterState_Dash extends CharacterState {
 
         name = "dash";
 
+        addTransition("run", function() { return me.stateFrame >= me.dashMinimumFrames; });
         addTransition("jumpSquat", function() { return me.shouldJump; });
         addTransition("turn", function() { return me.xAxisIsBackward; });
-        addTransition("idle", function() { return !me.xAxis.isActive && me.stateFrame >= me.dashMinimumFrames; });
     }
 
     override public function enter() {
@@ -20,8 +20,15 @@ class CharacterState_Dash extends CharacterState {
     override public function update() {
         super.update();
 
-        // Handle dash movement.
-        me.handleDashMovement();
+        if (me.stateFrame == 1) {
+            me.xVelocity += me.dashStartVelocity * me.xAxis.direction;
+            if (Math.abs(me.xVelocity) > me.dashMaxVelocity) {
+                me.xVelocity = me.dashMaxVelocity * me.xAxis.direction;
+            }
+        }
+        if (me.stateFrame >= 1) {
+            me.handleDashMovement();
+        }
         me.moveWithVelocity();
     }
 

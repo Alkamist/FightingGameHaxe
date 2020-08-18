@@ -27,7 +27,7 @@ class CharacterState_Turn extends CharacterState {
             me.xVelocity = me.applyFriction(me.xVelocity, me.groundFriction * 2.0);
         }
         if (me.xAxisIsBackward && me.stateFrame == me.slowDashBackFrames) {
-            me.isFacingRight = !me.isFacingRight;
+            me.isFacingRight = me.xAxis.value >= 0.0;
         }
         me.moveWithVelocity();
     }
