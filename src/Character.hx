@@ -92,8 +92,8 @@ class Character {
         jumpIsActive = input.xButton.isPressed || input.yButton.isPressed;
         xAxisIsForward = xAxis.isActive && (xAxis.value > 0.0 && isFacingRight || xAxis.value < 0.0 && !isFacingRight);
         xAxisIsBackward = xAxis.isActive && !xAxisIsForward;
-        xAxisSmashed = xAxis.magnitude > 0.8 && xAxis.activeFrames < 2;
-        yAxisSmashed = yAxis.magnitude > 0.6 && yAxis.activeFrames < 2;
+        xAxisSmashed = xAxis.magnitude >= 0.8 && xAxis.activeFrames < 2;
+        yAxisSmashed = yAxis.magnitude >= 0.6625 && yAxis.activeFrames < 2;
 
         stateMachine.update();
 

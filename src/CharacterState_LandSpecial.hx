@@ -4,7 +4,7 @@ class CharacterState_LandSpecial extends CharacterState {
 
         name = "landSpecial";
 
-        addTransition("idle", function() { return me.stateFrame >= 9; });
+        addTransition("idle", function() { return me.stateFrame >= 8; });
     }
 
     override public function enter() {
